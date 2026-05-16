@@ -334,7 +334,7 @@ export default function VotePage({ params }: Props) {
                   hasDelegated={hasDelegated}
                   delegatedTo={delegatedTo}
                   delegatedWeight={delegatedWeight}
-                  onDelegate={async (to, weight) => delegate(to, weight, { data: "0x", securityZone: "0x0000000000000000000000000000000000000000000000000000000000000000" })}
+                  onDelegate={async (to, weight) => delegate(to, weight)}
                   onRevoke={async () => revoke()}
                   isPending={isDelegating}
                   isRevoking={isRevoking}
@@ -354,7 +354,7 @@ export default function VotePage({ params }: Props) {
 
             {/* FHE technical card */}
             <motion.div
-              initial={{ opacity: 0, x: 20 }} 
+              initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.2 }}
               className="glass rounded-2xl p-5 border border-violet/[0.12]"

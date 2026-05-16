@@ -207,8 +207,11 @@ export function useDelegate() {
   });
   const isConfirming = !!hash && waitPending;
 
-  const delegate = (to: `0x${string}`, weight: 1 | 2 | 4, encWeight: { data: `0x${string}`; securityZone: `0x${string}` }) => {
+  const delegate = (to: `0x${string}`, weight: 1 | 2 | 4) => {
     if (!address) return;
+    // encWeight is a zeroed InEuint32 placeholder — real FHE encryption
+    // of the weight requires cofhe SDK integration (same path as castVote).
+    const encWeight = { ctHash: 0n, securityZone: 0, utype: 0, signature: "0x" as `0x${string}` };
     writeContract({
       address,
       abi:          GHOSTDELEGATION_ABI,

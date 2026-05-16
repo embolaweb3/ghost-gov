@@ -41,7 +41,7 @@ export function DelegationPanel({
       return;
     }
     setAddrErr("");
-    await onDelegate(toAddr as `0x${string}`, weight);
+    await onDelegate(toAddr as `0x${string}`, weight as 1 | 2 | 4);
   };
 
   return (
