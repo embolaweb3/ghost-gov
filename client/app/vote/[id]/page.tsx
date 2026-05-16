@@ -354,7 +354,7 @@ export default function VotePage({ params }: Props) {
 
             {/* FHE technical card */}
             <motion.div
-              initial={{ opacity: 0, x: 20 }}
+              initial={{ opacity: 0, x: 20 }} 
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.2 }}
               className="glass rounded-2xl p-5 border border-violet/[0.12]"

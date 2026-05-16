@@ -9,7 +9,7 @@ interface Props {
   hasDelegated:   boolean;
   delegatedTo?:   string;
   delegatedWeight?: number;
-  onDelegate:     (to: string, weight: 1 | 2 | 4) => Promise<void>;
+  onDelegate:     (to: `0x${string}`, weight: 1 | 2 | 4) => Promise<void>;
   onRevoke:       () => Promise<void>;
   isPending:      boolean;
   isRevoking:     boolean;
