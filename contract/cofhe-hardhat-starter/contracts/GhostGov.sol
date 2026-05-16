@@ -4,7 +4,7 @@ pragma solidity ^0.8.25;
 import "@fhenixprotocol/cofhe-contracts/FHE.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
-// ─ Interfaces ─
+//  Interfaces 
 
 interface IGhostAnalytics {
     struct AnalyticsView {
@@ -22,12 +22,25 @@ interface IGhostTreasury {
     function deposit(uint256 proposalId) external payable;
 }
 
+interface IGhostDelegation {
+    function getEncPower(address delegate_) external view returns (euint32);
+    function hasPower(address delegate_) external view returns (bool);
+    function delegateVoted(uint256 proposalId, address delegate_) external view returns (bool);
+    function recordDelegateVoted(uint256 proposalId, address delegate_) external;
+}
+
+interface IGhostVoter {
+    function mintIfNew(address voter) external;
+}
+
 contract GhostGov is Ownable {
 
     uint256 public constant BASE_COST = 0.0001 ether;
 
-    IGhostAnalytics public analyticsEngine;
-    IGhostTreasury  public treasury;
+    IGhostAnalytics  public analyticsEngine;
+    IGhostTreasury   public treasury;
+    IGhostDelegation public delegation;
+    IGhostVoter      public ghostVoter;
 
     struct Proposal {
         uint256 id;
@@ -77,14 +90,17 @@ contract GhostGov is Ownable {
     event ProposalCreated(uint256 indexed id, address indexed proposer, string title, string category, uint256 endTime);
     event VoteCast(uint256 indexed proposalId, address indexed voter);
     event WeightedVoteCast(uint256 indexed proposalId, address indexed voter, uint8 weight);
+    event DelegatedVoteCast(uint256 indexed proposalId, address indexed delegate, uint8 direction);
     event ProposalResolved(uint256 indexed proposalId);
     event ResultsPublished(uint256 indexed proposalId, uint32 forVotes, uint32 againstVotes, uint32 abstainVotes);
     event AnalyticsEngineSet(address indexed engine);
     event TreasurySet(address indexed treasury_);
+    event DelegationSet(address indexed delegation_);
+    event GhostVoterSet(address indexed ghostVoter_);
 
     constructor() Ownable(msg.sender) {}
 
-    // ─ Admin 
+    //  Admin ─
 
     function setAnalyticsEngine(address engine) external onlyOwner {
         analyticsEngine = IGhostAnalytics(engine);
@@ -96,13 +112,23 @@ contract GhostGov is Ownable {
         emit TreasurySet(treasury_);
     }
 
+    function setDelegation(address delegation_) external onlyOwner {
+        delegation = IGhostDelegation(delegation_);
+        emit DelegationSet(delegation_);
+    }
+
+    function setGhostVoter(address ghostVoter_) external onlyOwner {
+        ghostVoter = IGhostVoter(ghostVoter_);
+        emit GhostVoterSet(ghostVoter_);
+    }
+
     function setVotingDurationBounds(uint256 min_, uint256 max_) external onlyOwner {
         require(min_ > 0 && max_ >= min_, "Invalid bounds");
         minVotingDuration = min_;
         maxVotingDuration = max_;
     }
 
-    // ─ Proposal lifecycle ─
+    //  Proposal lifecycle 
 
     function createProposal(
         string calldata title,
@@ -137,7 +163,7 @@ contract GhostGov is Ownable {
         emit ProposalCreated(id, msg.sender, title, category, p.endTime);
     }
 
-    // ─ Voting ─
+    //  Voting 
 
     function castVote(
         uint256          proposalId,
@@ -192,9 +218,59 @@ contract GhostGov is Ownable {
 
         hasVoted[proposalId][msg.sender] = true;
         voterCount[proposalId]++;
+
+        if (address(ghostVoter) != address(0)) {
+            ghostVoter.mintIfNew(msg.sender);
+        }
     }
 
-    // ─ Resolution ─
+    /**
+     * @notice Cast a vote using FHE-accumulated delegated power.
+     *
+     * The delegate specifies direction as plaintext (FOR/AGAINST/ABSTAIN).
+     * Their encrypted encPower — accumulated via FHE.add from multiple delegators
+     * and capped via FHE.min — is routed into the chosen tally.
+     *
+     * The delegate does not know their exact weight (it's an encrypted handle).
+     * The anti-whale cap may have silently reduced it. This is by design.
+     *
+     * @param proposalId Proposal to vote on.
+     * @param direction  0 = FOR, 1 = AGAINST, 2 = ABSTAIN.
+     */
+    function castDelegatedVote(uint256 proposalId, uint8 direction) external {
+        require(address(delegation) != address(0), "Delegation not configured");
+        require(direction <= 2, "Invalid direction");
+
+        Proposal storage p = proposals[proposalId];
+        require(block.timestamp >= p.startTime, "Not started");
+        require(block.timestamp <  p.endTime,   "Voting ended");
+        require(delegation.hasPower(msg.sender),                        "No delegated power");
+        require(!delegation.delegateVoted(proposalId, msg.sender),      "Already voted as delegate");
+
+        euint32 power = delegation.getEncPower(msg.sender);
+
+        if (direction == 0) {
+            p.forVotes = FHE.add(p.forVotes, power);
+            FHE.allowThis(p.forVotes);
+        } else if (direction == 1) {
+            p.againstVotes = FHE.add(p.againstVotes, power);
+            FHE.allowThis(p.againstVotes);
+        } else {
+            p.abstainVotes = FHE.add(p.abstainVotes, power);
+            FHE.allowThis(p.abstainVotes);
+        }
+
+        delegation.recordDelegateVoted(proposalId, msg.sender);
+        voterCount[proposalId]++;
+
+        if (address(ghostVoter) != address(0)) {
+            ghostVoter.mintIfNew(msg.sender);
+        }
+
+        emit DelegatedVoteCast(proposalId, msg.sender, direction);
+    }
+
+    //  Resolution ──
 
     /**
      * @notice Close voting and grant GhostAnalytics cryptographic access to tallies.
@@ -248,7 +324,7 @@ contract GhostGov is Ownable {
         emit ResultsPublished(proposalId, forPlain, againstPlain, abstainPlain);
     }
 
-    // ─ FHE handle passthrough ─
+    //  FHE handle passthrough ──
 
     function getVoteHandles(uint256 proposalId) external view returns (
         euint32 forVotes,
@@ -260,7 +336,7 @@ contract GhostGov is Ownable {
         return (p.forVotes, p.againstVotes, p.abstainVotes, p.resolved);
     }
 
-    // ─ Views 
+    //  Views ─
 
     function getProposal(uint256 id) external view returns (ProposalView memory v) {
         Proposal storage p = proposals[id];
