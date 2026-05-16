@@ -8,11 +8,13 @@ import { useAccount, useChainId } from "wagmi";
 import { NavBar } from "@/components/NavBar";
 import { VotePanel } from "@/components/VotePanel";
 import { EncryptedCounter } from "@/components/EncryptedCounter";
-import { useProposal, useHasVoted, useResolveProposal, useComputeAnalytics } from "@/hooks/useVeilDAO";
+import { useProposal, useHasVoted, useResolveProposal, useComputeAnalytics, useDelegationStatus, useDelegate, useRevoke, useVoterBadge } from "@/hooks/useVeilDAO";
 import { useFHEVote } from "@/hooks/useFHEVote";
 import { CoercionProofPanel } from "@/components/CoercionProofPanel";
 import { FHEAnalyticsPanel } from "@/components/FHEAnalyticsPanel";
 import { LiveVoteFeed } from "@/components/LiveVoteFeed";
+import { DelegationPanel } from "@/components/DelegationPanel";
+import { VoterBadge } from "@/components/VoterBadge";
 import { getAnalyticsAddress } from "@/lib/contracts";
 
 interface Props { params: Promise<{ id: string }> }
@@ -57,6 +59,11 @@ export default function VotePage({ params }: Props) {
   const { castVote, stage, errMsg, lastChoice } = useFHEVote(proposalId);
   const { resolve, isPending: isResolving, isSuccess: resolveSuccess } = useResolveProposal(proposalId);
   const { compute, isPending: isComputing, isSuccess: computeSuccess } = useComputeAnalytics(proposalId);
+  const { hasDelegated, delegatedTo, delegatedWeight } = useDelegationStatus();
+  const { delegate, isPending: isDelegating } = useDelegate();
+  const { revoke, isRevoking } = useRevoke();
+  const { address: account } = useAccount();
+  const { hasNFT, tokenId, voteCount, whaleWatcher } = useVoterBadge(account);
 
   const analyticsAddress = getAnalyticsAddress(chainId ?? 0);
 
@@ -306,6 +313,34 @@ export default function VotePage({ params }: Props) {
             {/* Coercion-resistance proof — shown after a successful vote */}
             {stage === "success" && lastChoice && (
               <CoercionProofPanel votedFor={lastChoice} />
+            )}
+
+            {/* GhostVoter SBT badge */}
+            <VoterBadge
+              hasNFT={hasNFT}
+              tokenId={tokenId}
+              voteCount={voteCount}
+              whaleWatcher={whaleWatcher}
+            />
+
+            {/* Private delegation */}
+            {isActive && (
+              <motion.div
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.2 }}
+              >
+                <DelegationPanel
+                  hasDelegated={hasDelegated}
+                  delegatedTo={delegatedTo}
+                  delegatedWeight={delegatedWeight}
+                  onDelegate={async (to, weight) => delegate(to, weight, { data: "0x", securityZone: "0x0000000000000000000000000000000000000000000000000000000000000000" })}
+                  onRevoke={async () => revoke()}
+                  isPending={isDelegating}
+                  isRevoking={isRevoking}
+                  isDemoMode={isDemoMode}
+                />
+              </motion.div>
             )}
 
             {/* Live vote feed */}
