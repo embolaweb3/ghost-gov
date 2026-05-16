@@ -1,7 +1,7 @@
 "use client";
 
 import { useReadContract, useWriteContract, useWaitForTransactionReceipt, useAccount, useChainId } from "wagmi";
-import { VEILDAO_ABI, GHOSTANALYTICS_ABI, getVeilDAOAddress, getAnalyticsAddress, type Proposal, DEMO_PROPOSALS } from "@/lib/contracts";
+import { VEILDAO_ABI, GHOSTANALYTICS_ABI, GHOSTDELEGATION_ABI, GHOSTVOTER_ABI, getVeilDAOAddress, getAnalyticsAddress, getDelegationAddress, getGhostVoterAddress, type Proposal, DEMO_PROPOSALS } from "@/lib/contracts";
 import { useState, useEffect } from "react";
 
 function useContractAddress() {
@@ -12,6 +12,16 @@ function useContractAddress() {
 function useAnalyticsAddress() {
   const chainId = useChainId();
   return getAnalyticsAddress(chainId ?? 0);
+}
+
+function useDelegationAddress() {
+  const chainId = useChainId();
+  return getDelegationAddress(chainId ?? 0);
+}
+
+function useGhostVoterAddress() {
+  const chainId = useChainId();
+  return getGhostVoterAddress(chainId ?? 0);
 }
 
 export function useProposals() {
@@ -151,4 +161,127 @@ export function useComputeAnalytics(proposalId: bigint) {
   };
 
   return { compute, isPending, isConfirming, isSuccess };
+}
+
+export function useDelegationStatus() {
+  const { address: account } = useAccount();
+  const contractAddress = useDelegationAddress();
+
+  const { data: hasDelegated } = useReadContract({
+    address:      contractAddress,
+    abi:          GHOSTDELEGATION_ABI,
+    functionName: "hasDelegated",
+    args:         [account!],
+    query:        { enabled: !!contractAddress && !!account, refetchInterval: 5_000 },
+  });
+
+  const { data: delegatedTo } = useReadContract({
+    address:      contractAddress,
+    abi:          GHOSTDELEGATION_ABI,
+    functionName: "delegatedTo",
+    args:         [account!],
+    query:        { enabled: !!contractAddress && !!account && !!hasDelegated },
+  });
+
+  const { data: delegatedWeight } = useReadContract({
+    address:      contractAddress,
+    abi:          GHOSTDELEGATION_ABI,
+    functionName: "delegatedWeight",
+    args:         [account!],
+    query:        { enabled: !!contractAddress && !!account && !!hasDelegated },
+  });
+
+  return {
+    hasDelegated:   !!hasDelegated,
+    delegatedTo:    delegatedTo as `0x${string}` | undefined,
+    delegatedWeight: delegatedWeight as number | undefined,
+  };
+}
+
+export function useDelegate() {
+  const address = useDelegationAddress();
+  const { writeContract, data: hash, isPending } = useWriteContract();
+  const { isPending: waitPending, isSuccess } = useWaitForTransactionReceipt({
+    hash,
+    query: { enabled: !!hash },
+  });
+  const isConfirming = !!hash && waitPending;
+
+  const delegate = (to: `0x${string}`, weight: 1 | 2 | 4, encWeight: { data: `0x${string}`; securityZone: `0x${string}` }) => {
+    if (!address) return;
+    writeContract({
+      address,
+      abi:          GHOSTDELEGATION_ABI,
+      functionName: "delegate",
+      args:         [to, encWeight, weight],
+    });
+  };
+
+  return { delegate, isPending, isConfirming, isSuccess };
+}
+
+export function useRevoke() {
+  const address = useDelegationAddress();
+  const { writeContract, data: hash, isPending } = useWriteContract();
+  const { isPending: waitPending, isSuccess } = useWaitForTransactionReceipt({
+    hash,
+    query: { enabled: !!hash },
+  });
+  const isRevoking = isPending || (!!hash && waitPending);
+
+  const revoke = () => {
+    if (!address) return;
+    writeContract({
+      address,
+      abi:          GHOSTDELEGATION_ABI,
+      functionName: "revoke",
+      args:         [],
+    });
+  };
+
+  return { revoke, isRevoking, isSuccess };
+}
+
+export function useCastDelegatedVote(proposalId: bigint) {
+  const address = useContractAddress();
+  const { writeContract, data: hash, isPending } = useWriteContract();
+  const { isPending: waitPending, isSuccess } = useWaitForTransactionReceipt({
+    hash,
+    query: { enabled: !!hash },
+  });
+  const isConfirming = !!hash && waitPending;
+
+  const castDelegatedVote = (direction: 0 | 1 | 2) => {
+    if (!address) return;
+    writeContract({
+      address,
+      abi:          VEILDAO_ABI,
+      functionName: "castDelegatedVote",
+      args:         [proposalId, direction],
+    });
+  };
+
+  return { castDelegatedVote, isPending, isConfirming, isSuccess };
+}
+
+export function useVoterBadge(voter?: `0x${string}`) {
+  const address = useGhostVoterAddress();
+
+  const { data } = useReadContract({
+    address,
+    abi:          GHOSTVOTER_ABI,
+    functionName: "getVoterInfo",
+    args:         [voter!],
+    query:        { enabled: !!address && !!voter, refetchInterval: 10_000 },
+  });
+
+  if (!data) return { hasNFT: false, tokenId: undefined, voteCount: undefined, whaleWatcher: false };
+
+  const [tokenId, voteCount, whaleWatcher] = data as [bigint, bigint, boolean];
+  return {
+    hasNFT:       tokenId > 0n,
+    tokenId:      tokenId > 0n ? tokenId : undefined,
+    voteCount:    tokenId > 0n ? voteCount : undefined,
+    whaleWatcher,
+  };
 }
