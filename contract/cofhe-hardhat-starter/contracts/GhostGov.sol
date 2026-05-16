@@ -4,7 +4,7 @@ pragma solidity ^0.8.25;
 import "@fhenixprotocol/cofhe-contracts/FHE.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
-// ─── Interfaces ───────────────────────────────────────────────────────────────
+// ─ Interfaces ─
 
 interface IGhostAnalytics {
     struct AnalyticsView {
@@ -22,18 +22,6 @@ interface IGhostTreasury {
     function deposit(uint256 proposalId) external payable;
 }
 
-/**
- * @title GhostGov
- * @notice Coercion-resistant DAO governance with FHE voting.
- *
- * Multi-contract FHE access control:
- *   resolveProposal() calls FHE.allow(handle, analyticsEngine), granting
- *   GhostAnalytics cryptographic permission to run FHE operations on encrypted
- *   tallies it never accumulated itself — a novel FHE access control primitive.
- *
- * Quadratic fees are forwarded to GhostTreasury. Results are gated behind
- * GhostAnalytics quorum confirmation.
- */
 contract GhostGov is Ownable {
 
     uint256 public constant BASE_COST = 0.0001 ether;
@@ -96,7 +84,7 @@ contract GhostGov is Ownable {
 
     constructor() Ownable(msg.sender) {}
 
-    // ─── Admin ────────────────────────────────────────────────────────────────
+    // ─ Admin 
 
     function setAnalyticsEngine(address engine) external onlyOwner {
         analyticsEngine = IGhostAnalytics(engine);
@@ -114,7 +102,7 @@ contract GhostGov is Ownable {
         maxVotingDuration = max_;
     }
 
-    // ─── Proposal lifecycle ───────────────────────────────────────────────────
+    // ─ Proposal lifecycle ─
 
     function createProposal(
         string calldata title,
@@ -149,7 +137,7 @@ contract GhostGov is Ownable {
         emit ProposalCreated(id, msg.sender, title, category, p.endTime);
     }
 
-    // ─── Voting ───────────────────────────────────────────────────────────────
+    // ─ Voting ─
 
     function castVote(
         uint256          proposalId,
@@ -206,7 +194,7 @@ contract GhostGov is Ownable {
         voterCount[proposalId]++;
     }
 
-    // ─── Resolution ───────────────────────────────────────────────────────────
+    // ─ Resolution ─
 
     /**
      * @notice Close voting and grant GhostAnalytics cryptographic access to tallies.
@@ -260,7 +248,7 @@ contract GhostGov is Ownable {
         emit ResultsPublished(proposalId, forPlain, againstPlain, abstainPlain);
     }
 
-    // ─── FHE handle passthrough ───────────────────────────────────────────────
+    // ─ FHE handle passthrough ─
 
     function getVoteHandles(uint256 proposalId) external view returns (
         euint32 forVotes,
@@ -272,7 +260,7 @@ contract GhostGov is Ownable {
         return (p.forVotes, p.againstVotes, p.abstainVotes, p.resolved);
     }
 
-    // ─── Views ────────────────────────────────────────────────────────────────
+    // ─ Views 
 
     function getProposal(uint256 id) external view returns (ProposalView memory v) {
         Proposal storage p = proposals[id];

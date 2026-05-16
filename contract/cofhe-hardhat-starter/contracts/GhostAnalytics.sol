@@ -13,17 +13,7 @@ interface IGhostGov {
     );
 }
 
-/**
- * @title GhostAnalytics
- * @notice Pluggable FHE analytics engine for GhostGov.
- *
- * Demonstrates cross-contract FHE access control: GhostGov.resolveProposal()
- * calls FHE.allow(handle, address(this)), granting this contract cryptographic
- * permission to run FHE operations on tallies it never accumulated itself.
- *
- * Quorum gate: GhostGov.publishResults() is blocked until this contract
- * confirms decrypted totalVotes >= quorumThreshold.
- */
+
 contract GhostAnalytics is Ownable {
 
     IGhostGov public immutable gov;
@@ -113,7 +103,7 @@ contract GhostAnalytics is Ownable {
         emit AnalyticsPublished(proposalId, marginPlain, totalPlain);
     }
 
-    // ─── Quorum gate ──────────────────────────────────────────────────────────
+    // ─ Quorum gate 
 
     /**
      * @notice Called by GhostGov.publishResults() — results only land if quorum met.
@@ -126,7 +116,7 @@ contract GhostAnalytics is Ownable {
         return a.totalVotes >= quorumThreshold;
     }
 
-    // ─── Views ────────────────────────────────────────────────────────────────
+    // ─ Views 
 
     function getAnalytics(uint256 proposalId) external view returns (AnalyticsView memory v) {
         Analytics storage a = _analytics[proposalId];

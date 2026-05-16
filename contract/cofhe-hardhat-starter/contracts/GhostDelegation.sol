@@ -4,20 +4,6 @@ pragma solidity ^0.8.25;
 import "@fhenixprotocol/cofhe-contracts/FHE.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
-/**
- * @title GhostDelegation
- * @notice Private voting-power delegation for GhostGov.
- *
- * FHE patterns used:
- *   FHE.add(encPower[to], encWeight)   — accumulate delegated weight privately
- *   FHE.min(encPower[to], asEuint32(cap)) — anti-whale cap enforced on ciphertext
- *   FHE.sub(encPower[to], asEuint32(w))   — private revocation
- *   FHE.allow(encPower[to], gov)        — cross-contract access for castDelegatedVote
- *
- * Privacy guarantee: the delegate's total accumulated power is an encrypted handle.
- * They hold the handle but cannot determine the aggregate without oracle decryption.
- * Individual delegations are linkable on-chain (tx history), but amounts are hidden.
- */
 contract GhostDelegation is Ownable {
 
     address public immutable gov;
