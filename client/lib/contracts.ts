@@ -1,4 +1,4 @@
-//  Shared ABI fragments ─
+// ─── Shared ABI fragments ────────────────────────────────────────────────────
 
 const IN_EUINT32_COMPONENTS = [
   { internalType: "uint256", name: "ctHash",       type: "uint256" },
@@ -36,7 +36,7 @@ const ANALYTICS_VIEW_COMPONENTS = [
   { internalType: "bool",   name: "published",  type: "bool"   },
 ] as const;
 
-//  GhostGov ABI ─
+// ─── GhostGov ABI ─────────────────────────────────────────────────────────────
 
 export const VEILDAO_ABI =  [
     {
@@ -1152,7 +1152,7 @@ export const VEILDAO_ABI =  [
     }
   ] as const;
 
-//  GhostAnalytics ABI ─
+// ─── GhostAnalytics ABI ───────────────────────────────────────────────────────
 
 export const GHOSTANALYTICS_ABI =[
     {
@@ -2599,7 +2599,260 @@ export const GHOSTVOTER_ABI =  [
     }
   ] as const;
 
-//  Addresses ─
+export const GHOSTSYBIL_ABI = [
+  {
+    "inputs": [{ "internalType": "address", "name": "gov_", "type": "address" }],
+    "stateMutability": "nonpayable",
+    "type": "constructor"
+  },
+  {
+    "anonymous": false,
+    "inputs": [{ "indexed": true, "internalType": "address", "name": "voter", "type": "address" }, { "indexed": false, "internalType": "uint8", "name": "tier_", "type": "uint8" }],
+    "name": "ReputationSet",
+    "type": "event"
+  },
+  {
+    "inputs": [{ "internalType": "address", "name": "voter", "type": "address" }],
+    "name": "hasReputation",
+    "outputs": [{ "internalType": "bool", "name": "", "type": "bool" }],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [{ "internalType": "address", "name": "voter", "type": "address" }],
+    "name": "tier",
+    "outputs": [{ "internalType": "uint8", "name": "", "type": "uint8" }],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [{ "internalType": "address", "name": "voter", "type": "address" }, { "internalType": "uint32", "name": "score", "type": "uint32" }],
+    "name": "setReputation",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [{ "internalType": "address[]", "name": "voters", "type": "address[]" }, { "internalType": "uint32[]", "name": "scores", "type": "uint32[]" }],
+    "name": "batchSetReputation",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "gov",
+    "outputs": [{ "internalType": "address", "name": "", "type": "address" }],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "owner",
+    "outputs": [{ "internalType": "address", "name": "", "type": "address" }],
+    "stateMutability": "view",
+    "type": "function"
+  }
+] as const;
+
+export const GHOSTVETO_ABI = [
+  {
+    "inputs": [{ "internalType": "address", "name": "gov_", "type": "address" }],
+    "stateMutability": "nonpayable",
+    "type": "constructor"
+  },
+  {
+    "anonymous": false,
+    "inputs": [{ "indexed": true, "internalType": "address", "name": "guardian", "type": "address" }, { "indexed": false, "internalType": "bool", "name": "status", "type": "bool" }],
+    "name": "GuardianSet",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [{ "indexed": true, "internalType": "uint256", "name": "proposalId", "type": "uint256" }, { "indexed": true, "internalType": "address", "name": "guardian", "type": "address" }],
+    "name": "VetoSubmitted",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [{ "indexed": true, "internalType": "uint256", "name": "proposalId", "type": "uint256" }, { "indexed": false, "internalType": "bool", "name": "vetoed", "type": "bool" }],
+    "name": "VetoSettled",
+    "type": "event"
+  },
+  {
+    "inputs": [{ "internalType": "address", "name": "guardian", "type": "address" }, { "internalType": "bool", "name": "status", "type": "bool" }],
+    "name": "setGuardian",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      { "internalType": "uint256", "name": "proposalId", "type": "uint256" },
+      {
+        "components": [
+          { "internalType": "uint256", "name": "ctHash",       "type": "uint256" },
+          { "internalType": "uint8",   "name": "securityZone", "type": "uint8"   },
+          { "internalType": "uint8",   "name": "utype",        "type": "uint8"   },
+          { "internalType": "bytes",   "name": "signature",    "type": "bytes"   }
+        ],
+        "internalType": "struct InEuint32",
+        "name": "encVeto",
+        "type": "tuple"
+      }
+    ],
+    "name": "submitVeto",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [{ "internalType": "uint256", "name": "proposalId", "type": "uint256" }, { "internalType": "uint32", "name": "plain", "type": "uint32" }, { "internalType": "bytes", "name": "sig", "type": "bytes" }],
+    "name": "publishVetoResult",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [{ "internalType": "address", "name": "", "type": "address" }],
+    "name": "isGuardian",
+    "outputs": [{ "internalType": "bool", "name": "", "type": "bool" }],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+    "name": "vetoSubmitted",
+    "outputs": [{ "internalType": "bool", "name": "", "type": "bool" }],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+    "name": "vetoSettled",
+    "outputs": [{ "internalType": "bool", "name": "", "type": "bool" }],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+    "name": "vetoResult",
+    "outputs": [{ "internalType": "bool", "name": "", "type": "bool" }],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+    "name": "vetoGuardian",
+    "outputs": [{ "internalType": "address", "name": "", "type": "address" }],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [{ "internalType": "uint256", "name": "proposalId", "type": "uint256" }],
+    "name": "isVetoed",
+    "outputs": [{ "internalType": "bool", "name": "", "type": "bool" }],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "owner",
+    "outputs": [{ "internalType": "address", "name": "", "type": "address" }],
+    "stateMutability": "view",
+    "type": "function"
+  }
+] as const;
+
+export const GHOSTBRIBE_ABI = [
+  {
+    "inputs": [{ "internalType": "address", "name": "gov_", "type": "address" }],
+    "stateMutability": "nonpayable",
+    "type": "constructor"
+  },
+  {
+    "anonymous": false,
+    "inputs": [{ "indexed": true, "internalType": "uint256", "name": "bribeId", "type": "uint256" }, { "indexed": true, "internalType": "uint256", "name": "proposalId", "type": "uint256" }, { "indexed": false, "internalType": "uint8", "name": "direction", "type": "uint8" }, { "indexed": false, "internalType": "uint256", "name": "amount", "type": "uint256" }, { "indexed": true, "internalType": "address", "name": "briber", "type": "address" }],
+    "name": "BribeCreated",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [{ "indexed": true, "internalType": "uint256", "name": "bribeId", "type": "uint256" }, { "indexed": true, "internalType": "address", "name": "claimer", "type": "address" }, { "indexed": false, "internalType": "uint256", "name": "claimIndex", "type": "uint256" }],
+    "name": "ClaimAttempted",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [{ "indexed": true, "internalType": "uint256", "name": "bribeId", "type": "uint256" }, { "indexed": false, "internalType": "uint256", "name": "amountReturned", "type": "uint256" }],
+    "name": "BribeCancelled",
+    "type": "event"
+  },
+  {
+    "inputs": [{ "internalType": "uint256", "name": "proposalId", "type": "uint256" }, { "internalType": "uint8", "name": "direction", "type": "uint8" }],
+    "name": "createBribe",
+    "outputs": [],
+    "stateMutability": "payable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      { "internalType": "uint256", "name": "bribeId", "type": "uint256" },
+      {
+        "components": [
+          { "internalType": "uint256", "name": "ctHash",       "type": "uint256" },
+          { "internalType": "uint8",   "name": "securityZone", "type": "uint8"   },
+          { "internalType": "uint8",   "name": "utype",        "type": "uint8"   },
+          { "internalType": "bytes",   "name": "signature",    "type": "bytes"   }
+        ],
+        "internalType": "struct InEuint32",
+        "name": "encDir",
+        "type": "tuple"
+      }
+    ],
+    "name": "attemptClaim",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [{ "internalType": "uint256", "name": "bribeId", "type": "uint256" }],
+    "name": "cancelBribe",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "bribeCount",
+    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [{ "internalType": "uint256", "name": "bribeId", "type": "uint256" }],
+    "name": "getBribe",
+    "outputs": [
+      { "internalType": "uint256", "name": "proposalId",  "type": "uint256" },
+      { "internalType": "uint8",   "name": "direction",   "type": "uint8"   },
+      { "internalType": "uint256", "name": "totalFunds",  "type": "uint256" },
+      { "internalType": "address", "name": "briber",      "type": "address" },
+      { "internalType": "bool",    "name": "active",      "type": "bool"    },
+      { "internalType": "uint256", "name": "claimCount",  "type": "uint256" }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [{ "internalType": "uint256", "name": "bribeId", "type": "uint256" }],
+    "name": "getClaimCount",
+    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+    "stateMutability": "view",
+    "type": "function"
+  }
+] as const;
+
+// ─── Addresses ────────────────────────────────────────────────────────────────
 
 // Update all three after running: npx hardhat deploy-all --network arb-sepolia
 export const CONTRACT_ADDRESSES: Record<number, `0x${string}`> = {
@@ -2625,6 +2878,21 @@ export const DELEGATION_ADDRESSES: Record<number, `0x${string}`> = {
 export const GHOSTVOTER_ADDRESSES: Record<number, `0x${string}`> = {
   11155111: "0x0000000000000000000000000000000000000000",
   421614:   "0x6293f4AC1d61fd3b5Bf00e88B3c79feD16B74181",
+};
+
+export const GHOSTSYBIL_ADDRESSES: Record<number, `0x${string}`> = {
+  11155111: "0x0000000000000000000000000000000000000000",
+  421614:   "0x0000000000000000000000000000000000000000", // update after deploy-all
+};
+
+export const GHOSTVETO_ADDRESSES: Record<number, `0x${string}`> = {
+  11155111: "0x0000000000000000000000000000000000000000",
+  421614:   "0x0000000000000000000000000000000000000000", // update after deploy-all
+};
+
+export const GHOSTBRIBE_ADDRESSES: Record<number, `0x${string}`> = {
+  11155111: "0x0000000000000000000000000000000000000000",
+  421614:   "0x0000000000000000000000000000000000000000", // update after deploy-all
 };
 
 const ZERO = "0x0000000000000000000000000000000000000000";
@@ -2654,7 +2922,22 @@ export function getGhostVoterAddress(chainId: number): `0x${string}` | undefined
   return addr && addr !== ZERO ? addr : undefined;
 }
 
-//  Types ──
+export function getGhostSybilAddress(chainId: number): `0x${string}` | undefined {
+  const addr = GHOSTSYBIL_ADDRESSES[chainId];
+  return addr && addr !== ZERO ? addr : undefined;
+}
+
+export function getGhostVetoAddress(chainId: number): `0x${string}` | undefined {
+  const addr = GHOSTVETO_ADDRESSES[chainId];
+  return addr && addr !== ZERO ? addr : undefined;
+}
+
+export function getGhostBribeAddress(chainId: number): `0x${string}` | undefined {
+  const addr = GHOSTBRIBE_ADDRESSES[chainId];
+  return addr && addr !== ZERO ? addr : undefined;
+}
+
+// ─── Types ────────────────────────────────────────────────────────────────────
 
 export interface Proposal {
   id:                 bigint;
@@ -2686,7 +2969,7 @@ export const WEIGHT_COSTS: Record<VoteWeight, bigint> = {
   4: 1_600_000_000_000_000n, // 0.0016 ETH
 };
 
-//  Demo seed data ──
+// ─── Demo seed data ───────────────────────────────────────────────────────────
 
 export const DEMO_PROPOSALS: Proposal[] = [
   {

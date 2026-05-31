@@ -13,7 +13,7 @@ task('deploy-all', 'Deploy the full GhostGov system and wire all plugins')
     console.log(`   Deployer: ${deployer.address}`)
     console.log(`   Balance:  ${ethers.formatEther(await ethers.provider.getBalance(deployer.address))} ETH`)
 
-    //  1. GhostGov 
+    // GhostGov 
     console.log(`\n1/5  Deploying GhostGov...`)
     const GhostGov = await ethers.getContractFactory('GhostGov')
     const ghostgov = await GhostGov.deploy()
@@ -21,7 +21,7 @@ task('deploy-all', 'Deploy the full GhostGov system and wire all plugins')
     const govAddr = await ghostgov.getAddress()
     console.log(`     GhostGov:        ${govAddr}`)
 
-    //  2. GhostTreasury ─
+    // GhostTreasury
     console.log(`2/5  Deploying GhostTreasury...`)
     const GhostTreasury = await ethers.getContractFactory('GhostTreasury')
     const treasury = await GhostTreasury.deploy(govAddr)
@@ -29,7 +29,7 @@ task('deploy-all', 'Deploy the full GhostGov system and wire all plugins')
     const treasuryAddr = await treasury.getAddress()
     console.log(`     GhostTreasury:   ${treasuryAddr}`)
 
-    //  3. GhostAnalytics 
+    // GhostAnalytics 
     console.log(`3/5  Deploying GhostAnalytics...`)
     const quorum = parseInt(args.quorum)
     const GhostAnalytics = await ethers.getContractFactory('GhostAnalytics')
@@ -38,7 +38,7 @@ task('deploy-all', 'Deploy the full GhostGov system and wire all plugins')
     const analyticsAddr = await analytics.getAddress()
     console.log(`     GhostAnalytics:  ${analyticsAddr}`)
 
-    //  4. GhostDelegation ─
+    // GhostDelegation
     console.log(`4/5  Deploying GhostDelegation...`)
     const powerCap = parseInt(args.powercap)
     const GhostDelegation = await ethers.getContractFactory('GhostDelegation')
@@ -47,7 +47,7 @@ task('deploy-all', 'Deploy the full GhostGov system and wire all plugins')
     const delegationAddr = await delegation.getAddress()
     console.log(`     GhostDelegation: ${delegationAddr}`)
 
-    //  5. GhostVoter 
+    // GhostVoter 
     console.log(`5/5  Deploying GhostVoter...`)
     const GhostVoter = await ethers.getContractFactory('GhostVoter')
     const ghostVoter = await GhostVoter.deploy(govAddr)
@@ -55,7 +55,7 @@ task('deploy-all', 'Deploy the full GhostGov system and wire all plugins')
     const ghostVoterAddr = await ghostVoter.getAddress()
     console.log(`     GhostVoter:      ${ghostVoterAddr}`)
 
-    //  Wire up ─
+    //  Wire up
     console.log(`\nWiring contracts...`)
     const gov = ghostgov as any
     await (await gov.setAnalyticsEngine(analyticsAddr)).wait()
