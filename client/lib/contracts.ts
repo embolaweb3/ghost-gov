@@ -1,4 +1,4 @@
-// ─── Shared ABI fragments ────────────────────────────────────────────────────
+//  Shared ABI fragments ─
 
 const IN_EUINT32_COMPONENTS = [
   { internalType: "uint256", name: "ctHash",       type: "uint256" },
@@ -36,7 +36,7 @@ const ANALYTICS_VIEW_COMPONENTS = [
   { internalType: "bool",   name: "published",  type: "bool"   },
 ] as const;
 
-// ─── GhostGov ABI ─────────────────────────────────────────────────────────────
+//  GhostGov ABI
 
 export const VEILDAO_ABI =  [
     {
@@ -263,11 +263,37 @@ export const VEILDAO_ABI =  [
         {
           "indexed": true,
           "internalType": "address",
+          "name": "sybil_",
+          "type": "address"
+        }
+      ],
+      "name": "SybilSet",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
           "name": "treasury_",
           "type": "address"
         }
       ],
       "name": "TreasurySet",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "veto_",
+          "type": "address"
+        }
+      ],
+      "name": "VetoSet",
       "type": "event"
     },
     {
@@ -1054,11 +1080,37 @@ export const VEILDAO_ABI =  [
       "inputs": [
         {
           "internalType": "address",
+          "name": "sybil_",
+          "type": "address"
+        }
+      ],
+      "name": "setSybil",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
           "name": "treasury_",
           "type": "address"
         }
       ],
       "name": "setTreasury",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "veto_",
+          "type": "address"
+        }
+      ],
+      "name": "setVeto",
       "outputs": [],
       "stateMutability": "nonpayable",
       "type": "function"
@@ -1082,6 +1134,19 @@ export const VEILDAO_ABI =  [
       "type": "function"
     },
     {
+      "inputs": [],
+      "name": "sybil",
+      "outputs": [
+        {
+          "internalType": "contract IGhostSybil",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
       "inputs": [
         {
           "internalType": "address",
@@ -1100,6 +1165,19 @@ export const VEILDAO_ABI =  [
       "outputs": [
         {
           "internalType": "contract IGhostTreasury",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "veto",
+      "outputs": [
+        {
+          "internalType": "contract IGhostVeto",
           "name": "",
           "type": "address"
         }
@@ -1152,7 +1230,7 @@ export const VEILDAO_ABI =  [
     }
   ] as const;
 
-// ─── GhostAnalytics ABI ───────────────────────────────────────────────────────
+//  GhostAnalytics ABI ─
 
 export const GHOSTANALYTICS_ABI =[
     {
@@ -1862,9 +1940,9 @@ export const GHOSTDELEGATION_ABI = [
       "stateMutability": "nonpayable",
       "type": "function"
     }
-  ] as const;
+  ]as const;
 
-export const GHOSTVOTER_ABI =  [
+export const GHOSTVOTER_ABI =   [
     {
       "inputs": [
         {
@@ -2600,299 +2678,1139 @@ export const GHOSTVOTER_ABI =  [
   ] as const;
 
 export const GHOSTSYBIL_ABI = [
-  {
-    "inputs": [{ "internalType": "address", "name": "gov_", "type": "address" }],
-    "stateMutability": "nonpayable",
-    "type": "constructor"
-  },
-  {
-    "anonymous": false,
-    "inputs": [{ "indexed": true, "internalType": "address", "name": "voter", "type": "address" }, { "indexed": false, "internalType": "uint8", "name": "tier_", "type": "uint8" }],
-    "name": "ReputationSet",
-    "type": "event"
-  },
-  {
-    "inputs": [{ "internalType": "address", "name": "voter", "type": "address" }],
-    "name": "hasReputation",
-    "outputs": [{ "internalType": "bool", "name": "", "type": "bool" }],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [{ "internalType": "address", "name": "voter", "type": "address" }],
-    "name": "tier",
-    "outputs": [{ "internalType": "uint8", "name": "", "type": "uint8" }],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [{ "internalType": "address", "name": "voter", "type": "address" }, { "internalType": "uint32", "name": "score", "type": "uint32" }],
-    "name": "setReputation",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [{ "internalType": "address[]", "name": "voters", "type": "address[]" }, { "internalType": "uint32[]", "name": "scores", "type": "uint32[]" }],
-    "name": "batchSetReputation",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "gov",
-    "outputs": [{ "internalType": "address", "name": "", "type": "address" }],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "owner",
-    "outputs": [{ "internalType": "address", "name": "", "type": "address" }],
-    "stateMutability": "view",
-    "type": "function"
-  }
-] as const;
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "gov_",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "constructor"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "owner",
+          "type": "address"
+        }
+      ],
+      "name": "OwnableInvalidOwner",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "account",
+          "type": "address"
+        }
+      ],
+      "name": "OwnableUnauthorizedAccount",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "int32",
+          "name": "value",
+          "type": "int32"
+        }
+      ],
+      "name": "SecurityZoneOutOfBounds",
+      "type": "error"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "gov_",
+          "type": "address"
+        }
+      ],
+      "name": "GovUpdated",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "previousOwner",
+          "type": "address"
+        },
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "newOwner",
+          "type": "address"
+        }
+      ],
+      "name": "OwnershipTransferred",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "voter",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint8",
+          "name": "tier_",
+          "type": "uint8"
+        }
+      ],
+      "name": "ReputationSet",
+      "type": "event"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address[]",
+          "name": "voters",
+          "type": "address[]"
+        },
+        {
+          "internalType": "uint32[]",
+          "name": "scores",
+          "type": "uint32[]"
+        }
+      ],
+      "name": "batchSetReputation",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "voter",
+          "type": "address"
+        }
+      ],
+      "name": "getEncReputation",
+      "outputs": [
+        {
+          "internalType": "euint32",
+          "name": "",
+          "type": "bytes32"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "gov",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "name": "hasReputation",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "owner",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "renounceOwnership",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "gov_",
+          "type": "address"
+        }
+      ],
+      "name": "setGov",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "voter",
+          "type": "address"
+        },
+        {
+          "internalType": "uint32",
+          "name": "score",
+          "type": "uint32"
+        }
+      ],
+      "name": "setReputation",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "name": "tier",
+      "outputs": [
+        {
+          "internalType": "uint8",
+          "name": "",
+          "type": "uint8"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "newOwner",
+          "type": "address"
+        }
+      ],
+      "name": "transferOwnership",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    }
+  ]as const;
 
 export const GHOSTVETO_ABI = [
-  {
-    "inputs": [{ "internalType": "address", "name": "gov_", "type": "address" }],
-    "stateMutability": "nonpayable",
-    "type": "constructor"
-  },
-  {
-    "anonymous": false,
-    "inputs": [{ "indexed": true, "internalType": "address", "name": "guardian", "type": "address" }, { "indexed": false, "internalType": "bool", "name": "status", "type": "bool" }],
-    "name": "GuardianSet",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [{ "indexed": true, "internalType": "uint256", "name": "proposalId", "type": "uint256" }, { "indexed": true, "internalType": "address", "name": "guardian", "type": "address" }],
-    "name": "VetoSubmitted",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [{ "indexed": true, "internalType": "uint256", "name": "proposalId", "type": "uint256" }, { "indexed": false, "internalType": "bool", "name": "vetoed", "type": "bool" }],
-    "name": "VetoSettled",
-    "type": "event"
-  },
-  {
-    "inputs": [{ "internalType": "address", "name": "guardian", "type": "address" }, { "internalType": "bool", "name": "status", "type": "bool" }],
-    "name": "setGuardian",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      { "internalType": "uint256", "name": "proposalId", "type": "uint256" },
-      {
-        "components": [
-          { "internalType": "uint256", "name": "ctHash",       "type": "uint256" },
-          { "internalType": "uint8",   "name": "securityZone", "type": "uint8"   },
-          { "internalType": "uint8",   "name": "utype",        "type": "uint8"   },
-          { "internalType": "bytes",   "name": "signature",    "type": "bytes"   }
-        ],
-        "internalType": "struct InEuint32",
-        "name": "encVeto",
-        "type": "tuple"
-      }
-    ],
-    "name": "submitVeto",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [{ "internalType": "uint256", "name": "proposalId", "type": "uint256" }, { "internalType": "uint32", "name": "plain", "type": "uint32" }, { "internalType": "bytes", "name": "sig", "type": "bytes" }],
-    "name": "publishVetoResult",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [{ "internalType": "address", "name": "", "type": "address" }],
-    "name": "isGuardian",
-    "outputs": [{ "internalType": "bool", "name": "", "type": "bool" }],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
-    "name": "vetoSubmitted",
-    "outputs": [{ "internalType": "bool", "name": "", "type": "bool" }],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
-    "name": "vetoSettled",
-    "outputs": [{ "internalType": "bool", "name": "", "type": "bool" }],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
-    "name": "vetoResult",
-    "outputs": [{ "internalType": "bool", "name": "", "type": "bool" }],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
-    "name": "vetoGuardian",
-    "outputs": [{ "internalType": "address", "name": "", "type": "address" }],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [{ "internalType": "uint256", "name": "proposalId", "type": "uint256" }],
-    "name": "isVetoed",
-    "outputs": [{ "internalType": "bool", "name": "", "type": "bool" }],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "owner",
-    "outputs": [{ "internalType": "address", "name": "", "type": "address" }],
-    "stateMutability": "view",
-    "type": "function"
-  }
-] as const;
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "gov_",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "constructor"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint8",
+          "name": "got",
+          "type": "uint8"
+        },
+        {
+          "internalType": "uint8",
+          "name": "expected",
+          "type": "uint8"
+        }
+      ],
+      "name": "InvalidEncryptedInput",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "owner",
+          "type": "address"
+        }
+      ],
+      "name": "OwnableInvalidOwner",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "account",
+          "type": "address"
+        }
+      ],
+      "name": "OwnableUnauthorizedAccount",
+      "type": "error"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "gov_",
+          "type": "address"
+        }
+      ],
+      "name": "GovUpdated",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "guardian",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "bool",
+          "name": "status",
+          "type": "bool"
+        }
+      ],
+      "name": "GuardianSet",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "previousOwner",
+          "type": "address"
+        },
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "newOwner",
+          "type": "address"
+        }
+      ],
+      "name": "OwnershipTransferred",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "uint256",
+          "name": "proposalId",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "bool",
+          "name": "vetoed",
+          "type": "bool"
+        }
+      ],
+      "name": "VetoSettled",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "uint256",
+          "name": "proposalId",
+          "type": "uint256"
+        },
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "guardian",
+          "type": "address"
+        }
+      ],
+      "name": "VetoSubmitted",
+      "type": "event"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "proposalId",
+          "type": "uint256"
+        }
+      ],
+      "name": "getEncVeto",
+      "outputs": [
+        {
+          "internalType": "euint32",
+          "name": "",
+          "type": "bytes32"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "gov",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "name": "isGuardian",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "proposalId",
+          "type": "uint256"
+        }
+      ],
+      "name": "isVetoed",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "owner",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "proposalId",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint32",
+          "name": "plain",
+          "type": "uint32"
+        },
+        {
+          "internalType": "bytes",
+          "name": "sig",
+          "type": "bytes"
+        }
+      ],
+      "name": "publishVetoResult",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "renounceOwnership",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "gov_",
+          "type": "address"
+        }
+      ],
+      "name": "setGov",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "guardian",
+          "type": "address"
+        },
+        {
+          "internalType": "bool",
+          "name": "status",
+          "type": "bool"
+        }
+      ],
+      "name": "setGuardian",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "proposalId",
+          "type": "uint256"
+        },
+        {
+          "components": [
+            {
+              "internalType": "uint256",
+              "name": "ctHash",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint8",
+              "name": "securityZone",
+              "type": "uint8"
+            },
+            {
+              "internalType": "uint8",
+              "name": "utype",
+              "type": "uint8"
+            },
+            {
+              "internalType": "bytes",
+              "name": "signature",
+              "type": "bytes"
+            }
+          ],
+          "internalType": "struct InEuint32",
+          "name": "encVeto",
+          "type": "tuple"
+        }
+      ],
+      "name": "submitVeto",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "newOwner",
+          "type": "address"
+        }
+      ],
+      "name": "transferOwnership",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "name": "vetoGuardian",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "name": "vetoResult",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "name": "vetoSettled",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "name": "vetoSubmitted",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    }
+  ] as const;
 
 export const GHOSTBRIBE_ABI = [
-  {
-    "inputs": [{ "internalType": "address", "name": "gov_", "type": "address" }],
-    "stateMutability": "nonpayable",
-    "type": "constructor"
-  },
-  {
-    "anonymous": false,
-    "inputs": [{ "indexed": true, "internalType": "uint256", "name": "bribeId", "type": "uint256" }, { "indexed": true, "internalType": "uint256", "name": "proposalId", "type": "uint256" }, { "indexed": false, "internalType": "uint8", "name": "direction", "type": "uint8" }, { "indexed": false, "internalType": "uint256", "name": "amount", "type": "uint256" }, { "indexed": true, "internalType": "address", "name": "briber", "type": "address" }],
-    "name": "BribeCreated",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [{ "indexed": true, "internalType": "uint256", "name": "bribeId", "type": "uint256" }, { "indexed": true, "internalType": "address", "name": "claimer", "type": "address" }, { "indexed": false, "internalType": "uint256", "name": "claimIndex", "type": "uint256" }],
-    "name": "ClaimAttempted",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [{ "indexed": true, "internalType": "uint256", "name": "bribeId", "type": "uint256" }, { "indexed": false, "internalType": "uint256", "name": "amountReturned", "type": "uint256" }],
-    "name": "BribeCancelled",
-    "type": "event"
-  },
-  {
-    "inputs": [{ "internalType": "uint256", "name": "proposalId", "type": "uint256" }, { "internalType": "uint8", "name": "direction", "type": "uint8" }],
-    "name": "createBribe",
-    "outputs": [],
-    "stateMutability": "payable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      { "internalType": "uint256", "name": "bribeId", "type": "uint256" },
-      {
-        "components": [
-          { "internalType": "uint256", "name": "ctHash",       "type": "uint256" },
-          { "internalType": "uint8",   "name": "securityZone", "type": "uint8"   },
-          { "internalType": "uint8",   "name": "utype",        "type": "uint8"   },
-          { "internalType": "bytes",   "name": "signature",    "type": "bytes"   }
-        ],
-        "internalType": "struct InEuint32",
-        "name": "encDir",
-        "type": "tuple"
-      }
-    ],
-    "name": "attemptClaim",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [{ "internalType": "uint256", "name": "bribeId", "type": "uint256" }],
-    "name": "cancelBribe",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "bribeCount",
-    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [{ "internalType": "uint256", "name": "bribeId", "type": "uint256" }],
-    "name": "getBribe",
-    "outputs": [
-      { "internalType": "uint256", "name": "proposalId",  "type": "uint256" },
-      { "internalType": "uint8",   "name": "direction",   "type": "uint8"   },
-      { "internalType": "uint256", "name": "totalFunds",  "type": "uint256" },
-      { "internalType": "address", "name": "briber",      "type": "address" },
-      { "internalType": "bool",    "name": "active",      "type": "bool"    },
-      { "internalType": "uint256", "name": "claimCount",  "type": "uint256" }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [{ "internalType": "uint256", "name": "bribeId", "type": "uint256" }],
-    "name": "getClaimCount",
-    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
-    "stateMutability": "view",
-    "type": "function"
-  }
-] as const;
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "gov_",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "constructor"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint8",
+          "name": "got",
+          "type": "uint8"
+        },
+        {
+          "internalType": "uint8",
+          "name": "expected",
+          "type": "uint8"
+        }
+      ],
+      "name": "InvalidEncryptedInput",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "owner",
+          "type": "address"
+        }
+      ],
+      "name": "OwnableInvalidOwner",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "account",
+          "type": "address"
+        }
+      ],
+      "name": "OwnableUnauthorizedAccount",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "int32",
+          "name": "value",
+          "type": "int32"
+        }
+      ],
+      "name": "SecurityZoneOutOfBounds",
+      "type": "error"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "uint256",
+          "name": "bribeId",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "amountReturned",
+          "type": "uint256"
+        }
+      ],
+      "name": "BribeCancelled",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "uint256",
+          "name": "bribeId",
+          "type": "uint256"
+        },
+        {
+          "indexed": true,
+          "internalType": "uint256",
+          "name": "proposalId",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint8",
+          "name": "direction",
+          "type": "uint8"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "amount",
+          "type": "uint256"
+        },
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "briber",
+          "type": "address"
+        }
+      ],
+      "name": "BribeCreated",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "uint256",
+          "name": "bribeId",
+          "type": "uint256"
+        },
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "claimer",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "claimIndex",
+          "type": "uint256"
+        }
+      ],
+      "name": "ClaimAttempted",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "previousOwner",
+          "type": "address"
+        },
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "newOwner",
+          "type": "address"
+        }
+      ],
+      "name": "OwnershipTransferred",
+      "type": "event"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "bribeId",
+          "type": "uint256"
+        },
+        {
+          "components": [
+            {
+              "internalType": "uint256",
+              "name": "ctHash",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint8",
+              "name": "securityZone",
+              "type": "uint8"
+            },
+            {
+              "internalType": "uint8",
+              "name": "utype",
+              "type": "uint8"
+            },
+            {
+              "internalType": "bytes",
+              "name": "signature",
+              "type": "bytes"
+            }
+          ],
+          "internalType": "struct InEuint32",
+          "name": "encDir",
+          "type": "tuple"
+        }
+      ],
+      "name": "attemptClaim",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "bribeCount",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "name": "bribes",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "proposalId",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint8",
+          "name": "targetDirection",
+          "type": "uint8"
+        },
+        {
+          "internalType": "uint256",
+          "name": "totalFunds",
+          "type": "uint256"
+        },
+        {
+          "internalType": "address",
+          "name": "briber",
+          "type": "address"
+        },
+        {
+          "internalType": "bool",
+          "name": "active",
+          "type": "bool"
+        },
+        {
+          "internalType": "uint256",
+          "name": "claimCount",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "bribeId",
+          "type": "uint256"
+        }
+      ],
+      "name": "cancelBribe",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "proposalId",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint8",
+          "name": "direction",
+          "type": "uint8"
+        }
+      ],
+      "name": "createBribe",
+      "outputs": [],
+      "stateMutability": "payable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "bribeId",
+          "type": "uint256"
+        }
+      ],
+      "name": "getBribe",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "proposalId",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint8",
+          "name": "direction",
+          "type": "uint8"
+        },
+        {
+          "internalType": "uint256",
+          "name": "totalFunds",
+          "type": "uint256"
+        },
+        {
+          "internalType": "address",
+          "name": "briber",
+          "type": "address"
+        },
+        {
+          "internalType": "bool",
+          "name": "active",
+          "type": "bool"
+        },
+        {
+          "internalType": "uint256",
+          "name": "claimCount",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "bribeId",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "idx",
+          "type": "uint256"
+        }
+      ],
+      "name": "getClaim",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "claimer",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "timestamp",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "bribeId",
+          "type": "uint256"
+        }
+      ],
+      "name": "getClaimCount",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "gov",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "owner",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "renounceOwnership",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "newOwner",
+          "type": "address"
+        }
+      ],
+      "name": "transferOwnership",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    }
+  ] as const;
 
-// ─── Addresses ────────────────────────────────────────────────────────────────
+//  Addresses ─
 
 // Update all three after running: npx hardhat deploy-all --network arb-sepolia
 export const CONTRACT_ADDRESSES: Record<number, `0x${string}`> = {
   11155111: "0x0000000000000000000000000000000000000000",
-  421614:   "0xbeaB9f02996BedeAfb7dd7c6c52a413395a192de",
+  421614:   "0xA959AdE59f617cef4Ef5eb248929C377CfD901eB",
 };
 
 export const ANALYTICS_ADDRESSES: Record<number, `0x${string}`> = {
   11155111: "0x0000000000000000000000000000000000000000",
-  421614:   "0xD450624f1795aBB2EDc8bd9530246F107f0Bde00",
+  421614:   "0x64ebaF259a9C4724e6A75DD0D768EC8550A8E23D",
 };
 
 export const TREASURY_ADDRESSES: Record<number, `0x${string}`> = {
   11155111: "0x0000000000000000000000000000000000000000",
-  421614:   "0x2Cb003528AFefeB1801143A91171d8c3722d7ec0",
+  421614:   "0x91A1774549D2a3AB703B4904f692F34050aB4D25",
 };
 
 export const DELEGATION_ADDRESSES: Record<number, `0x${string}`> = {
   11155111: "0x0000000000000000000000000000000000000000",
-  421614:   "0x1c9c7F9dE6D41f17Ea3E81f70777dD58ab2e3c8c",
+  421614:   "0x98f108F497ec7665d3EB3Cc11E2f85ec360b0927",
 };
 
 export const GHOSTVOTER_ADDRESSES: Record<number, `0x${string}`> = {
   11155111: "0x0000000000000000000000000000000000000000",
-  421614:   "0x6293f4AC1d61fd3b5Bf00e88B3c79feD16B74181",
+  421614:   "0x47b55c50701282311c0d0A4c0AFc878Cb7f80905",
 };
 
 export const GHOSTSYBIL_ADDRESSES: Record<number, `0x${string}`> = {
   11155111: "0x0000000000000000000000000000000000000000",
-  421614:   "0x0000000000000000000000000000000000000000", // update after deploy-all
+  421614:   "0x33A71B181886eEfAb57224ED9301ceA666d4f03a",
 };
 
 export const GHOSTVETO_ADDRESSES: Record<number, `0x${string}`> = {
   11155111: "0x0000000000000000000000000000000000000000",
-  421614:   "0x0000000000000000000000000000000000000000", // update after deploy-all
+  421614:   "0x9129fF0B3918a418e090125C002bC1C209EfA02D",
 };
 
 export const GHOSTBRIBE_ADDRESSES: Record<number, `0x${string}`> = {
   11155111: "0x0000000000000000000000000000000000000000",
-  421614:   "0x0000000000000000000000000000000000000000", // update after deploy-all
+  421614:   "0x1cA05204Aa046e11F3a463ad2E88f25E21f74721",
 };
 
 const ZERO = "0x0000000000000000000000000000000000000000";
@@ -2937,7 +3855,7 @@ export function getGhostBribeAddress(chainId: number): `0x${string}` | undefined
   return addr && addr !== ZERO ? addr : undefined;
 }
 
-// ─── Types ────────────────────────────────────────────────────────────────────
+//  Types ──
 
 export interface Proposal {
   id:                 bigint;
@@ -2969,7 +3887,7 @@ export const WEIGHT_COSTS: Record<VoteWeight, bigint> = {
   4: 1_600_000_000_000_000n, // 0.0016 ETH
 };
 
-// ─── Demo seed data ───────────────────────────────────────────────────────────
+//  Demo seed data ──
 
 export const DEMO_PROPOSALS: Proposal[] = [
   {
