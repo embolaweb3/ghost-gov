@@ -6,13 +6,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 
 /**
  * @title GhostVoter
- * @notice Soulbound participation NFT for GhostGov voters.
- *
- * Minted automatically on a wallet's first vote (regular or delegated).
- * Non-transferable: proves governance participation without revealing vote direction.
- * "Whale Watcher" trait unlocks at WHALE_THRESHOLD votes — rewards sustained engagement.
- *
- * On-chain metadata: tokenURI returns JSON with vote count and whale status.
+ * @notice Soulbound participation NFT for GhostGov voters
  */
 contract GhostVoter is ERC721, Ownable {
 
