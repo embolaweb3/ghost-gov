@@ -85,7 +85,7 @@ contract GhostBribe is Ownable {
         emit BribeCancelled(bribeId, amount);
     }
 
-    //  Voter ─
+    //  Voter 
 
     /**
      * @notice Submit an encrypted vote direction to claim a bribe.

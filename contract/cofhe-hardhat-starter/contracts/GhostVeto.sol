@@ -6,20 +6,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 
 /**
  * @title GhostVeto
- * @notice Encrypted guardian veto for GhostGov proposals.
- *
- * FHE pattern:
- *   Guardian submits encVeto (0 = pass, 1 = veto) during the voting window.
- *   The veto value is stored as a ciphertext — nobody knows the guardian's intent
- *   until oracle decryption, eliminating targeted lobbying of the guardian entirely.
- *
- *   FHE.allowPublic() on the veto handle signals the oracle to decrypt.
- *   Anyone with the oracle's signature can then call publishVetoResult to settle.
- *   GhostGov.publishResults checks isVetoed() before releasing decrypted tallies.
- *
- * Key property: guardian *identity* is public, guardian *intent* is private until
- * resolution. A vetoing guardian cannot be pressured because nobody knows if the
- * veto was exercised until after the outcome is final.
+ * @notice Encrypted guardian veto for GhostGov proposals
  */
 contract GhostVeto is Ownable {
 
@@ -46,7 +33,7 @@ contract GhostVeto is Ownable {
         gov = gov_;
     }
 
-    // ─── Admin ────────────────────────────────────────────────────────────────
+    //  Admin
 
     function setGuardian(address guardian, bool status) external onlyOwner {
         isGuardian[guardian] = status;
@@ -58,7 +45,7 @@ contract GhostVeto is Ownable {
         emit GovUpdated(gov_);
     }
 
-    // ─── Guardian ─────────────────────────────────────────────────────────────
+    //  Guardian
 
     /**
      * @notice Submit an encrypted veto during the voting window.
@@ -85,7 +72,7 @@ contract GhostVeto is Ownable {
         emit VetoSubmitted(proposalId, msg.sender);
     }
 
-    // ─── Oracle settlement ────────────────────────────────────────────────────
+    //  Oracle settlement
 
     /**
      * @notice Settle the veto outcome after oracle decryption.
@@ -114,7 +101,7 @@ contract GhostVeto is Ownable {
         emit VetoSettled(proposalId, plain == 1);
     }
 
-    // ─── Views ────────────────────────────────────────────────────────────────
+    //  Views
 
     /**
      * @notice Returns true if veto was settled AND the guardian exercised the veto.

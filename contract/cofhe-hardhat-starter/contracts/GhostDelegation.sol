@@ -7,16 +7,6 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 /**
  * @title GhostDelegation
  * @notice Private voting-power delegation for GhostGov.
- *
- * FHE patterns used:
- *   FHE.add(encPower[to], encWeight)   — accumulate delegated weight privately
- *   FHE.min(encPower[to], asEuint32(cap)) — anti-whale cap enforced on ciphertext
- *   FHE.sub(encPower[to], asEuint32(w))   — private revocation
- *   FHE.allow(encPower[to], gov)        — cross-contract access for castDelegatedVote
- *
- * Privacy guarantee: the delegate's total accumulated power is an encrypted handle.
- * They hold the handle but cannot determine the aggregate without oracle decryption.
- * Individual delegations are linkable on-chain (tx history), but amounts are hidden.
  */
 contract GhostDelegation is Ownable {
 
@@ -43,7 +33,7 @@ contract GhostDelegation is Ownable {
         powerCap = powerCap_;
     }
 
-    // ─── Delegation ───────────────────────────────────────────────────────────
+    //  Delegation 
 
     /**
      * @notice Delegate your voting weight to `to`.
@@ -113,14 +103,14 @@ contract GhostDelegation is Ownable {
         emit Revoked(msg.sender, to);
     }
 
-    // ─── Gov callbacks ────────────────────────────────────────────────────────
+    //  Gov callbacks 
 
     function recordDelegateVoted(uint256 proposalId, address delegate_) external onlyGov {
         require(!delegateVoted[proposalId][delegate_], "Already voted as delegate");
         delegateVoted[proposalId][delegate_] = true;
     }
 
-    // ─── Views ────────────────────────────────────────────────────────────────
+    //  Views
 
     function getEncPower(address delegate_) external view returns (euint32) {
         return _encPower[delegate_];
@@ -130,7 +120,7 @@ contract GhostDelegation is Ownable {
         return FHE.isInitialized(_encPower[delegate_]);
     }
 
-    // ─── Admin ────────────────────────────────────────────────────────────────
+    //  Admin
 
     function setPowerCap(uint32 cap) external onlyOwner {
         powerCap = cap;

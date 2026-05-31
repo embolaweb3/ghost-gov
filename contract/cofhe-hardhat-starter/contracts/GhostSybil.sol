@@ -39,7 +39,7 @@ contract GhostSybil is Ownable {
         gov = gov_;
     }
 
-    // ─── Admin ────────────────────────────────────────────────────────────────
+    //  Admin
 
     function setGov(address gov_) external onlyOwner {
         gov = gov_;
@@ -85,7 +85,7 @@ contract GhostSybil is Ownable {
         emit ReputationSet(voter, tier[voter]);
     }
 
-    // ─── Views ────────────────────────────────────────────────────────────────
+    //  Views
 
     /**
      * @notice Returns the encrypted reputation handle for use in GhostGov FHE.min.
