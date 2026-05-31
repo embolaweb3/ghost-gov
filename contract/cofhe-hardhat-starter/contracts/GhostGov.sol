@@ -4,7 +4,7 @@ pragma solidity ^0.8.25;
 import "@fhenixprotocol/cofhe-contracts/FHE.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
-//  Interfaces 
+// ─── Interfaces ───────────────────────────────────────────────────────────────
 
 interface IGhostAnalytics {
     struct AnalyticsView {
@@ -33,6 +33,29 @@ interface IGhostVoter {
     function mintIfNew(address voter) external;
 }
 
+interface IGhostSybil {
+    function hasReputation(address voter) external view returns (bool);
+    function getEncReputation(address voter) external view returns (euint32);
+}
+
+interface IGhostVeto {
+    function vetoSubmitted(uint256 proposalId) external view returns (bool);
+    function vetoSettled(uint256 proposalId) external view returns (bool);
+    function isVetoed(uint256 proposalId) external view returns (bool);
+}
+
+/**
+ * @title GhostGov
+ * @notice Coercion-resistant DAO governance with FHE voting.
+ *
+ * Multi-contract FHE access control:
+ *   resolveProposal() calls FHE.allow(handle, analyticsEngine), granting
+ *   GhostAnalytics cryptographic permission to run FHE operations on encrypted
+ *   tallies it never accumulated itself — a novel FHE access control primitive.
+ *
+ * Quadratic fees are forwarded to GhostTreasury. Results are gated behind
+ * GhostAnalytics quorum confirmation.
+ */
 contract GhostGov is Ownable {
 
     uint256 public constant BASE_COST = 0.0001 ether;
@@ -41,6 +64,8 @@ contract GhostGov is Ownable {
     IGhostTreasury   public treasury;
     IGhostDelegation public delegation;
     IGhostVoter      public ghostVoter;
+    IGhostSybil      public sybil;
+    IGhostVeto       public veto;
 
     struct Proposal {
         uint256 id;
@@ -97,10 +122,12 @@ contract GhostGov is Ownable {
     event TreasurySet(address indexed treasury_);
     event DelegationSet(address indexed delegation_);
     event GhostVoterSet(address indexed ghostVoter_);
+    event SybilSet(address indexed sybil_);
+    event VetoSet(address indexed veto_);
 
     constructor() Ownable(msg.sender) {}
 
-    //  Admin ─
+    // ─── Admin ────────────────────────────────────────────────────────────────
 
     function setAnalyticsEngine(address engine) external onlyOwner {
         analyticsEngine = IGhostAnalytics(engine);
@@ -122,13 +149,23 @@ contract GhostGov is Ownable {
         emit GhostVoterSet(ghostVoter_);
     }
 
+    function setSybil(address sybil_) external onlyOwner {
+        sybil = IGhostSybil(sybil_);
+        emit SybilSet(sybil_);
+    }
+
+    function setVeto(address veto_) external onlyOwner {
+        veto = IGhostVeto(veto_);
+        emit VetoSet(veto_);
+    }
+
     function setVotingDurationBounds(uint256 min_, uint256 max_) external onlyOwner {
         require(min_ > 0 && max_ >= min_, "Invalid bounds");
         minVotingDuration = min_;
         maxVotingDuration = max_;
     }
 
-    //  Proposal lifecycle 
+    // ─── Proposal lifecycle ───────────────────────────────────────────────────
 
     function createProposal(
         string calldata title,
@@ -163,7 +200,7 @@ contract GhostGov is Ownable {
         emit ProposalCreated(id, msg.sender, title, category, p.endTime);
     }
 
-    //  Voting 
+    // ─── Voting ───────────────────────────────────────────────────────────────
 
     function castVote(
         uint256          proposalId,
@@ -208,9 +245,22 @@ contract GhostGov is Ownable {
         require(block.timestamp <  p.endTime,   "Voting ended");
         require(!hasVoted[proposalId][msg.sender], "Already voted");
 
-        p.forVotes     = FHE.add(p.forVotes,     FHE.asEuint32(encFor));
-        p.againstVotes = FHE.add(p.againstVotes, FHE.asEuint32(encAgainst));
-        p.abstainVotes = FHE.add(p.abstainVotes, FHE.asEuint32(encAbstain));
+        euint32 eFor     = FHE.asEuint32(encFor);
+        euint32 eAgainst = FHE.asEuint32(encAgainst);
+        euint32 eAbstain = FHE.asEuint32(encAbstain);
+
+        // Sybil gate: FHE.min(voteComponent, encReputation) silently zeroes sybil votes.
+        // rep=0 → all components become 0; rep=1 → components pass through unchanged.
+        if (address(sybil) != address(0) && sybil.hasReputation(msg.sender)) {
+            euint32 rep = sybil.getEncReputation(msg.sender);
+            p.forVotes     = FHE.add(p.forVotes,     FHE.min(eFor,     rep));
+            p.againstVotes = FHE.add(p.againstVotes, FHE.min(eAgainst, rep));
+            p.abstainVotes = FHE.add(p.abstainVotes, FHE.min(eAbstain, rep));
+        } else {
+            p.forVotes     = FHE.add(p.forVotes,     eFor);
+            p.againstVotes = FHE.add(p.againstVotes, eAgainst);
+            p.abstainVotes = FHE.add(p.abstainVotes, eAbstain);
+        }
 
         FHE.allowThis(p.forVotes);
         FHE.allowThis(p.againstVotes);
@@ -270,7 +320,7 @@ contract GhostGov is Ownable {
         emit DelegatedVoteCast(proposalId, msg.sender, direction);
     }
 
-    //  Resolution ──
+    // ─── Resolution ───────────────────────────────────────────────────────────
 
     /**
      * @notice Close voting and grant GhostAnalytics cryptographic access to tallies.
@@ -316,6 +366,13 @@ contract GhostGov is Ownable {
             require(analyticsEngine.isQuorumMet(proposalId), "Quorum not met");
         }
 
+        // Veto gate: if a guardian submitted a veto, it must be settled before
+        // results are published. A settled veto of 1 permanently blocks publication.
+        if (address(veto) != address(0) && veto.vetoSubmitted(proposalId)) {
+            require(veto.vetoSettled(proposalId), "Veto not yet settled by oracle");
+            require(!veto.isVetoed(proposalId),   "Proposal vetoed by guardian");
+        }
+
         FHE.publishDecryptResult(p.forVotes,     forPlain,     forSig);
         FHE.publishDecryptResult(p.againstVotes, againstPlain, againstSig);
         FHE.publishDecryptResult(p.abstainVotes, abstainPlain, abstainSig);
@@ -324,7 +381,7 @@ contract GhostGov is Ownable {
         emit ResultsPublished(proposalId, forPlain, againstPlain, abstainPlain);
     }
 
-    //  FHE handle passthrough ──
+    // ─── FHE handle passthrough ───────────────────────────────────────────────
 
     function getVoteHandles(uint256 proposalId) external view returns (
         euint32 forVotes,
@@ -336,7 +393,7 @@ contract GhostGov is Ownable {
         return (p.forVotes, p.againstVotes, p.abstainVotes, p.resolved);
     }
 
-    //  Views ─
+    // ─── Views ────────────────────────────────────────────────────────────────
 
     function getProposal(uint256 id) external view returns (ProposalView memory v) {
         Proposal storage p = proposals[id];

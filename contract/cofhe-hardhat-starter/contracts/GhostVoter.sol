@@ -37,7 +37,7 @@ contract GhostVoter is ERC721, Ownable {
         gov = gov_;
     }
 
-    //  Soulbound 
+    // ─── Soulbound ────────────────────────────────────────────────────────────
 
     // OZ v5: override _update to block all transfers after mint
     function _update(
@@ -50,7 +50,7 @@ contract GhostVoter is ERC721, Ownable {
         return super._update(to, tokenId, auth);
     }
 
-    // Gov callbacks 
+    // ─── Gov callbacks ────────────────────────────────────────────────────────
 
     /**
      * @notice Called by GhostGov on every vote. Mints on first call, increments count thereafter.
@@ -70,7 +70,7 @@ contract GhostVoter is ERC721, Ownable {
         }
     }
 
-    // Views 
+    // ─── Views ────────────────────────────────────────────────────────────────
 
     function hasVoterNFT(address voter) external view returns (bool) {
         return voterToken[voter] != 0;
@@ -93,7 +93,7 @@ contract GhostVoter is ERC721, Ownable {
         whaleWatcher = votes >= WHALE_THRESHOLD;
     }
 
-    //  Metadata
+    // ─── Metadata ─────────────────────────────────────────────────────────────
 
     function tokenURI(uint256 tokenId) public view override returns (string memory) {
         _requireOwned(tokenId);
@@ -110,14 +110,14 @@ contract GhostVoter is ERC721, Ownable {
         ));
     }
 
-    //  Admin 
+    // ─── Admin ────────────────────────────────────────────────────────────────
 
     function setGov(address gov_) external onlyOwner {
         gov = gov_;
         emit GovSet(gov_);
     }
 
-    // Internal 
+    // ─── Internal ─────────────────────────────────────────────────────────────
 
     function _toString(uint256 value) internal pure returns (string memory) {
         if (value == 0) return "0";

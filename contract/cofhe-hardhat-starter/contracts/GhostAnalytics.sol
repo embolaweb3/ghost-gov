@@ -13,7 +13,6 @@ interface IGhostGov {
     );
 }
 
-
 contract GhostAnalytics is Ownable {
 
     IGhostGov public immutable gov;
@@ -103,7 +102,7 @@ contract GhostAnalytics is Ownable {
         emit AnalyticsPublished(proposalId, marginPlain, totalPlain);
     }
 
-    // ─ Quorum gate 
+    //  Quorum gate 
 
     /**
      * @notice Called by GhostGov.publishResults() — results only land if quorum met.
@@ -116,7 +115,7 @@ contract GhostAnalytics is Ownable {
         return a.totalVotes >= quorumThreshold;
     }
 
-    // ─ Views 
+    //  Views
 
     function getAnalytics(uint256 proposalId) external view returns (AnalyticsView memory v) {
         Analytics storage a = _analytics[proposalId];
