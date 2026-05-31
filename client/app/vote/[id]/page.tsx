@@ -8,13 +8,16 @@ import { useAccount, useChainId } from "wagmi";
 import { NavBar } from "@/components/NavBar";
 import { VotePanel } from "@/components/VotePanel";
 import { EncryptedCounter } from "@/components/EncryptedCounter";
-import { useProposal, useHasVoted, useResolveProposal, useComputeAnalytics, useDelegationStatus, useDelegate, useRevoke, useVoterBadge } from "@/hooks/useVeilDAO";
+import { useProposal, useHasVoted, useResolveProposal, useComputeAnalytics, useDelegationStatus, useDelegate, useRevoke, useVoterBadge, useSybilScore, useVetoStatus, useSubmitVeto, useBribes, useBribeInfo, useCreateBribe, useAttemptClaim, useCancelBribe } from "@/hooks/useVeilDAO";
 import { useFHEVote } from "@/hooks/useFHEVote";
 import { CoercionProofPanel } from "@/components/CoercionProofPanel";
 import { FHEAnalyticsPanel } from "@/components/FHEAnalyticsPanel";
 import { LiveVoteFeed } from "@/components/LiveVoteFeed";
 import { DelegationPanel } from "@/components/DelegationPanel";
 import { VoterBadge } from "@/components/VoterBadge";
+import { SybilScore } from "@/components/SybilScore";
+import { VetoStatus } from "@/components/VetoStatus";
+import { BribeMonitor } from "@/components/BribeMonitor";
 import { getAnalyticsAddress } from "@/lib/contracts";
 
 interface Props { params: Promise<{ id: string }> }
@@ -64,6 +67,19 @@ export default function VotePage({ params }: Props) {
   const { revoke, isRevoking } = useRevoke();
   const { address: account } = useAccount();
   const { hasNFT, tokenId, voteCount, whaleWatcher } = useVoterBadge(account);
+
+  // Wave 5: attack-defence plugins
+  const { hasReputation, tier }                                   = useSybilScore(account);
+  const { vetoSubmitted, vetoSettled, vetoResult, vetoGuardian, isGuardian } = useVetoStatus(proposalId, account);
+  const { submitVeto, isSubmitting: isVetoSubmitting }            = useSubmitVeto(proposalId);
+  const { bribeCount, bribeAddress }                              = useBribes(proposalId);
+  const bribe0 = useBribeInfo(0n, (bribeCount ?? 0n) > 0n);
+  const bribe1 = useBribeInfo(1n, (bribeCount ?? 0n) > 1n);
+  const bribe2 = useBribeInfo(2n, (bribeCount ?? 0n) > 2n);
+  const allBribes = [bribe0, bribe1, bribe2].filter((b): b is NonNullable<typeof b> => !!b && b.proposalId === proposalId);
+  const { createBribe, isCreating: isBribeCreating }              = useCreateBribe();
+  const { attemptClaim, isClaiming: isBribeClaiming }             = useAttemptClaim();
+  const { cancelBribe, isCancelling: isBribeCancelling }          = useCancelBribe();
 
   const analyticsAddress = getAnalyticsAddress(chainId ?? 0);
 
@@ -342,6 +358,54 @@ export default function VotePage({ params }: Props) {
                 />
               </motion.div>
             )}
+
+            {/* Sybil reputation score */}
+            <SybilScore
+              hasReputation={hasReputation}
+              tier={tier}
+              isDemoMode={isDemoMode}
+            />
+
+            {/* Guardian veto */}
+            {isActive && (
+              <motion.div
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.22 }}
+              >
+                <VetoStatus
+                  proposalId={proposalId}
+                  isGuardian={isGuardian}
+                  vetoSubmitted={vetoSubmitted}
+                  vetoSettled={vetoSettled}
+                  vetoResult={vetoResult}
+                  vetoGuardian={vetoGuardian}
+                  isDemoMode={isDemoMode}
+                  isSubmitting={isVetoSubmitting}
+                  onSubmitVeto={async (v) => submitVeto(v)}
+                />
+              </motion.div>
+            )}
+
+            {/* Bribe monitor */}
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.24 }}
+            >
+              <BribeMonitor
+                proposalId={proposalId}
+                bribes={allBribes}
+                hasVoted={hasVoted}
+                isDemoMode={isDemoMode}
+                isCreating={isBribeCreating}
+                isClaiming={isBribeClaiming}
+                isCancelling={isBribeCancelling}
+                onCreateBribe={async (dir, amt) => createBribe(proposalId, dir, amt)}
+                onAttemptClaim={async (id) => attemptClaim(id)}
+                onCancelBribe={async (id) => cancelBribe(id)}
+              />
+            </motion.div>
 
             {/* Live vote feed */}
             <motion.div
