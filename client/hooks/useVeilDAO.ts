@@ -1,7 +1,8 @@
 "use client";
 
 import { useReadContract, useWriteContract, useWaitForTransactionReceipt, useAccount, useChainId } from "wagmi";
-import { VEILDAO_ABI, GHOSTANALYTICS_ABI, GHOSTDELEGATION_ABI, GHOSTVOTER_ABI, getVeilDAOAddress, getAnalyticsAddress, getDelegationAddress, getGhostVoterAddress, type Proposal, DEMO_PROPOSALS } from "@/lib/contracts";
+import { parseEther } from "viem";
+import { VEILDAO_ABI, GHOSTANALYTICS_ABI, GHOSTDELEGATION_ABI, GHOSTVOTER_ABI, GHOSTSYBIL_ABI, GHOSTVETO_ABI, GHOSTBRIBE_ABI, getVeilDAOAddress, getAnalyticsAddress, getDelegationAddress, getGhostVoterAddress, getGhostSybilAddress, getGhostVetoAddress, getGhostBribeAddress, type Proposal, DEMO_PROPOSALS } from "@/lib/contracts";
 import { useState, useEffect } from "react";
 
 function useContractAddress() {
@@ -287,4 +288,224 @@ export function useVoterBadge(voter?: `0x${string}`) {
     voteCount:    tokenId > 0n ? voteCount : undefined,
     whaleWatcher,
   };
+}
+
+// ─── Private address helpers ─────────────────────────────────────────────────
+
+function useGhostSybilAddress() {
+  const chainId = useChainId();
+  return getGhostSybilAddress(chainId ?? 0);
+}
+
+function useGhostVetoAddress() {
+  const chainId = useChainId();
+  return getGhostVetoAddress(chainId ?? 0);
+}
+
+function useGhostBribeAddress() {
+  const chainId = useChainId();
+  return getGhostBribeAddress(chainId ?? 0);
+}
+
+// ─── GhostSybil ──────────────────────────────────────────────────────────────
+
+export function useSybilScore(voter?: `0x${string}`) {
+  const address = useGhostSybilAddress();
+
+  const { data: hasRep } = useReadContract({
+    address,
+    abi:          GHOSTSYBIL_ABI,
+    functionName: "hasReputation",
+    args:         [voter!],
+    query:        { enabled: !!address && !!voter, refetchInterval: 10_000 },
+  });
+
+  const { data: tierData } = useReadContract({
+    address,
+    abi:          GHOSTSYBIL_ABI,
+    functionName: "tier",
+    args:         [voter!],
+    query:        { enabled: !!address && !!voter && !!hasRep },
+  });
+
+  return {
+    hasReputation: !!hasRep,
+    tier:          tierData !== undefined ? Number(tierData) : 0,
+  };
+}
+
+// ─── GhostVeto ───────────────────────────────────────────────────────────────
+
+export function useVetoStatus(proposalId: bigint, account?: `0x${string}`) {
+  const address = useGhostVetoAddress();
+
+  const { data: vetoSubmitted } = useReadContract({
+    address,
+    abi:          GHOSTVETO_ABI,
+    functionName: "vetoSubmitted",
+    args:         [proposalId],
+    query:        { enabled: !!address, refetchInterval: 5_000 },
+  });
+
+  const { data: vetoSettled } = useReadContract({
+    address,
+    abi:          GHOSTVETO_ABI,
+    functionName: "vetoSettled",
+    args:         [proposalId],
+    query:        { enabled: !!address && !!vetoSubmitted },
+  });
+
+  const { data: vetoResult } = useReadContract({
+    address,
+    abi:          GHOSTVETO_ABI,
+    functionName: "vetoResult",
+    args:         [proposalId],
+    query:        { enabled: !!address && !!vetoSettled },
+  });
+
+  const { data: vetoGuardian } = useReadContract({
+    address,
+    abi:          GHOSTVETO_ABI,
+    functionName: "vetoGuardian",
+    args:         [proposalId],
+    query:        { enabled: !!address && !!vetoSubmitted },
+  });
+
+  const { data: isGuardianData } = useReadContract({
+    address,
+    abi:          GHOSTVETO_ABI,
+    functionName: "isGuardian",
+    args:         [account!],
+    query:        { enabled: !!address && !!account },
+  });
+
+  return {
+    vetoSubmitted: !!vetoSubmitted,
+    vetoSettled:   !!vetoSettled,
+    vetoResult:    !!vetoResult,
+    vetoGuardian:  vetoGuardian as `0x${string}` | undefined,
+    isGuardian:    !!isGuardianData,
+  };
+}
+
+export function useSubmitVeto(proposalId: bigint) {
+  const address = useGhostVetoAddress();
+  const { writeContract, data: hash, isPending } = useWriteContract();
+  const { isPending: waitPending, isSuccess } = useWaitForTransactionReceipt({
+    hash,
+    query: { enabled: !!hash },
+  });
+  const isSubmitting = isPending || (!!hash && waitPending);
+
+  const submitVeto = (vote: 0 | 1) => {
+    if (!address) return;
+    const encVeto = { ctHash: BigInt(vote), securityZone: 0, utype: 0, signature: "0x" as `0x${string}` };
+    writeContract({
+      address,
+      abi:          GHOSTVETO_ABI,
+      functionName: "submitVeto",
+      args:         [proposalId, encVeto],
+    });
+  };
+
+  return { submitVeto, isSubmitting, isSuccess };
+}
+
+// ─── GhostBribe ──────────────────────────────────────────────────────────────
+
+export function useBribes(proposalId: bigint) {
+  const address = useGhostBribeAddress();
+
+  const { data: count } = useReadContract({
+    address,
+    abi:          GHOSTBRIBE_ABI,
+    functionName: "bribeCount",
+    query:        { enabled: !!address, refetchInterval: 5_000 },
+  });
+
+  return { bribeCount: count as bigint | undefined, bribeAddress: address };
+}
+
+export function useBribeInfo(bribeId: bigint, enabled: boolean) {
+  const address = useGhostBribeAddress();
+
+  const { data } = useReadContract({
+    address,
+    abi:          GHOSTBRIBE_ABI,
+    functionName: "getBribe",
+    args:         [bribeId],
+    query:        { enabled: !!address && enabled, refetchInterval: 5_000 },
+  });
+
+  if (!data) return undefined;
+  const [proposalId, direction, totalFunds, briber, active, claimCount] = data as [bigint, number, bigint, `0x${string}`, boolean, bigint];
+  return { bribeId, proposalId, direction: Number(direction), totalFunds, briber, active, claimCount };
+}
+
+export function useCreateBribe() {
+  const address = useGhostBribeAddress();
+  const { writeContract, data: hash, isPending } = useWriteContract();
+  const { isPending: waitPending, isSuccess } = useWaitForTransactionReceipt({
+    hash,
+    query: { enabled: !!hash },
+  });
+  const isCreating = isPending || (!!hash && waitPending);
+
+  const createBribe = (proposalId: bigint, direction: 0 | 1 | 2, amountEth: string) => {
+    if (!address) return;
+    writeContract({
+      address,
+      abi:          GHOSTBRIBE_ABI,
+      functionName: "createBribe",
+      args:         [proposalId, direction],
+      value:        parseEther(amountEth),
+    });
+  };
+
+  return { createBribe, isCreating, isSuccess };
+}
+
+export function useAttemptClaim() {
+  const address = useGhostBribeAddress();
+  const { writeContract, data: hash, isPending } = useWriteContract();
+  const { isPending: waitPending, isSuccess } = useWaitForTransactionReceipt({
+    hash,
+    query: { enabled: !!hash },
+  });
+  const isClaiming = isPending || (!!hash && waitPending);
+
+  const attemptClaim = (bribeId: bigint) => {
+    if (!address) return;
+    const encDir = { ctHash: 0n, securityZone: 0, utype: 0, signature: "0x" as `0x${string}` };
+    writeContract({
+      address,
+      abi:          GHOSTBRIBE_ABI,
+      functionName: "attemptClaim",
+      args:         [bribeId, encDir],
+    });
+  };
+
+  return { attemptClaim, isClaiming, isSuccess };
+}
+
+export function useCancelBribe() {
+  const address = useGhostBribeAddress();
+  const { writeContract, data: hash, isPending } = useWriteContract();
+  const { isPending: waitPending, isSuccess } = useWaitForTransactionReceipt({
+    hash,
+    query: { enabled: !!hash },
+  });
+  const isCancelling = isPending || (!!hash && waitPending);
+
+  const cancelBribe = (bribeId: bigint) => {
+    if (!address) return;
+    writeContract({
+      address,
+      abi:          GHOSTBRIBE_ABI,
+      functionName: "cancelBribe",
+      args:         [bribeId],
+    });
+  };
+
+  return { cancelBribe, isCancelling, isSuccess };
 }
