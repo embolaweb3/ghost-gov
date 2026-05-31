@@ -13,24 +13,24 @@ task('deploy-all', 'Deploy the full GhostGov system and wire all plugins')
     console.log(`   Deployer: ${deployer.address}`)
     console.log(`   Balance:  ${ethers.formatEther(await ethers.provider.getBalance(deployer.address))} ETH`)
 
-    // GhostGov 
-    console.log(`\n1/5  Deploying GhostGov...`)
+    //  GhostGov 
+    console.log(`\n1/8  Deploying GhostGov...`)
     const GhostGov = await ethers.getContractFactory('GhostGov')
     const ghostgov = await GhostGov.deploy()
     await ghostgov.waitForDeployment()
     const govAddr = await ghostgov.getAddress()
     console.log(`     GhostGov:        ${govAddr}`)
 
-    // GhostTreasury
-    console.log(`2/5  Deploying GhostTreasury...`)
+    //  GhostTreasury 
+    console.log(`2/8  Deploying GhostTreasury...`)
     const GhostTreasury = await ethers.getContractFactory('GhostTreasury')
     const treasury = await GhostTreasury.deploy(govAddr)
     await treasury.waitForDeployment()
     const treasuryAddr = await treasury.getAddress()
     console.log(`     GhostTreasury:   ${treasuryAddr}`)
 
-    // GhostAnalytics 
-    console.log(`3/5  Deploying GhostAnalytics...`)
+    //  GhostAnalytics 
+    console.log(`3/8  Deploying GhostAnalytics...`)
     const quorum = parseInt(args.quorum)
     const GhostAnalytics = await ethers.getContractFactory('GhostAnalytics')
     const analytics = await GhostAnalytics.deploy(govAddr, quorum)
@@ -38,8 +38,8 @@ task('deploy-all', 'Deploy the full GhostGov system and wire all plugins')
     const analyticsAddr = await analytics.getAddress()
     console.log(`     GhostAnalytics:  ${analyticsAddr}`)
 
-    // GhostDelegation
-    console.log(`4/5  Deploying GhostDelegation...`)
+    // GhostDelegation 
+    console.log(`4/8  Deploying GhostDelegation...`)
     const powerCap = parseInt(args.powercap)
     const GhostDelegation = await ethers.getContractFactory('GhostDelegation')
     const delegation = await GhostDelegation.deploy(govAddr, powerCap)
@@ -48,12 +48,36 @@ task('deploy-all', 'Deploy the full GhostGov system and wire all plugins')
     console.log(`     GhostDelegation: ${delegationAddr}`)
 
     // GhostVoter 
-    console.log(`5/5  Deploying GhostVoter...`)
+    console.log(`5/8  Deploying GhostVoter...`)
     const GhostVoter = await ethers.getContractFactory('GhostVoter')
     const ghostVoter = await GhostVoter.deploy(govAddr)
     await ghostVoter.waitForDeployment()
     const ghostVoterAddr = await ghostVoter.getAddress()
     console.log(`     GhostVoter:      ${ghostVoterAddr}`)
+
+    // GhostSybil 
+    console.log(`6/8  Deploying GhostSybil...`)
+    const GhostSybil = await ethers.getContractFactory('GhostSybil')
+    const ghostSybil = await GhostSybil.deploy(govAddr)
+    await ghostSybil.waitForDeployment()
+    const ghostSybilAddr = await ghostSybil.getAddress()
+    console.log(`     GhostSybil:      ${ghostSybilAddr}`)
+
+    // GhostVeto
+    console.log(`7/8  Deploying GhostVeto...`)
+    const GhostVeto = await ethers.getContractFactory('GhostVeto')
+    const ghostVeto = await GhostVeto.deploy(govAddr)
+    await ghostVeto.waitForDeployment()
+    const ghostVetoAddr = await ghostVeto.getAddress()
+    console.log(`     GhostVeto:       ${ghostVetoAddr}`)
+
+    // GhostBribe 
+    console.log(`8/8  Deploying GhostBribe...`)
+    const GhostBribe = await ethers.getContractFactory('GhostBribe')
+    const ghostBribe = await GhostBribe.deploy(govAddr)
+    await ghostBribe.waitForDeployment()
+    const ghostBribeAddr = await ghostBribe.getAddress()
+    console.log(`     GhostBribe:      ${ghostBribeAddr}`)
 
     //  Wire up
     console.log(`\nWiring contracts...`)
@@ -66,6 +90,11 @@ task('deploy-all', 'Deploy the full GhostGov system and wire all plugins')
     console.log(`     GhostGov.delegation = GhostDelegation ✓`)
     await (await gov.setGhostVoter(ghostVoterAddr)).wait()
     console.log(`     GhostGov.ghostVoter = GhostVoter ✓`)
+    await (await gov.setSybil(ghostSybilAddr)).wait()
+    console.log(`     GhostGov.sybil = GhostSybil ✓`)
+    await (await gov.setVeto(ghostVetoAddr)).wait()
+    console.log(`     GhostGov.veto = GhostVeto ✓`)
+    // GhostBribe is standalone — it reads GhostGov but GhostGov has no back-reference
 
     //  Save + print 
     saveDeployment(network.name, 'GhostGov',        govAddr)
@@ -73,11 +102,17 @@ task('deploy-all', 'Deploy the full GhostGov system and wire all plugins')
     saveDeployment(network.name, 'GhostTreasury',   treasuryAddr)
     saveDeployment(network.name, 'GhostDelegation', delegationAddr)
     saveDeployment(network.name, 'GhostVoter',      ghostVoterAddr)
+    saveDeployment(network.name, 'GhostSybil',      ghostSybilAddr)
+    saveDeployment(network.name, 'GhostVeto',       ghostVetoAddr)
+    saveDeployment(network.name, 'GhostBribe',      ghostBribeAddr)
 
     console.log(`\n✅ Deployment complete. Update frontend/lib/contracts.ts:`)
-    console.log(`   CONTRACT_ADDRESSES[chainId]    = "${govAddr}"`)
-    console.log(`   ANALYTICS_ADDRESSES[chainId]   = "${analyticsAddr}"`)
-    console.log(`   TREASURY_ADDRESSES[chainId]    = "${treasuryAddr}"`)
-    console.log(`   DELEGATION_ADDRESSES[chainId]  = "${delegationAddr}"`)
-    console.log(`   GHOSTVOTER_ADDRESSES[chainId]  = "${ghostVoterAddr}"\n`)
+    console.log(`   CONTRACT_ADDRESSES[chainId]   = "${govAddr}"`)
+    console.log(`   ANALYTICS_ADDRESSES[chainId]  = "${analyticsAddr}"`)
+    console.log(`   TREASURY_ADDRESSES[chainId]   = "${treasuryAddr}"`)
+    console.log(`   DELEGATION_ADDRESSES[chainId] = "${delegationAddr}"`)
+    console.log(`   GHOSTVOTER_ADDRESSES[chainId] = "${ghostVoterAddr}"`)
+    console.log(`   GHOSTSYBIL_ADDRESSES[chainId] = "${ghostSybilAddr}"`)
+    console.log(`   GHOSTVETO_ADDRESSES[chainId]  = "${ghostVetoAddr}"`)
+    console.log(`   GHOSTBRIBE_ADDRESSES[chainId] = "${ghostBribeAddr}"\n`)
   })
