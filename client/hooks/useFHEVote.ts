@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useWriteContract, useWaitForTransactionReceipt, useChainId, useWalletClient, usePublicClient } from "wagmi";
+import type { Hex } from "viem";
 import { createCofheConfig, createCofheClient } from "@cofhe/sdk/web";
 import { arbSepolia } from "@cofhe/sdk/chains";
 import { Encryptable } from "@cofhe/sdk";
@@ -33,6 +34,7 @@ export function useFHEVote(proposalId: bigint) {
   const [stage,      setStage]      = useState<VoteStage>("idle");
   const [errMsg,     setErrMsg]     = useState<string>("");
   const [lastChoice, setLastChoice] = useState<VoteChoice | null>(null);
+  const [txHash,     setTxHash]     = useState<Hex | undefined>();
 
   // Keep the initialised client in a ref so it survives re-renders.
   const clientRef = useRef<ReturnType<typeof createCofheClient> | null>(null);
@@ -48,12 +50,11 @@ export function useFHEVote(proposalId: bigint) {
     });
   }, [walletClient, publicClient]);
 
-  const { writeContractAsync, data: hash } = useWriteContract();
-  const { isPending: waitPending, isSuccess } = useWaitForTransactionReceipt({
-    hash,
-    query: { enabled: !!hash },
+  const { writeContractAsync } = useWriteContract();
+  const { isSuccess } = useWaitForTransactionReceipt({
+    hash:  txHash,
+    query: { enabled: !!txHash },
   });
-  const isConfirming = !!hash && waitPending;
 
   const castVote = useCallback(
     async (choice: VoteChoice, weight: VoteWeight = 1) => {
@@ -74,9 +75,6 @@ export function useFHEVote(proposalId: bigint) {
         setLastChoice(choice);
         setStage("encrypting");
 
-        // Each vote is a triple: exactly one field carries the weight, the rest are 0.
-        // The FHE ciphertexts are randomised — an observer CANNOT determine
-        // which was non-zero, making coercion cryptographically impossible.
         const w = BigInt(weight);
         const forVal     = choice === "for"     ? w : 0n;
         const againstVal = choice === "against" ? w : 0n;
@@ -99,28 +97,25 @@ export function useFHEVote(proposalId: bigint) {
 
         const cost = WEIGHT_COSTS[weight];
 
-        if (weight === 1) {
-          // Free path — castVote (no ETH required)
-          await writeContractAsync({
-            address,
-            abi:          VEILDAO_ABI,
-            functionName: "castVote",
-            args:         [proposalId, toArg(encrypted[0]), toArg(encrypted[1]), toArg(encrypted[2])],
-            ...ARB_GAS,
-          });
-        } else {
-          // Quadratic path — castWeightedVote with ETH payment
-          await writeContractAsync({
-            address,
-            abi:          VEILDAO_ABI,
-            functionName: "castWeightedVote",
-            args:         [proposalId, toArg(encrypted[0]), toArg(encrypted[1]), toArg(encrypted[2]), weight],
-            value:        cost,
-            ...ARB_GAS,
-          });
-        }
+        const hash = weight === 1
+          ? await writeContractAsync({
+              address,
+              abi:          VEILDAO_ABI,
+              functionName: "castVote",
+              args:         [proposalId, toArg(encrypted[0]), toArg(encrypted[1]), toArg(encrypted[2])],
+              ...ARB_GAS,
+            })
+          : await writeContractAsync({
+              address,
+              abi:          VEILDAO_ABI,
+              functionName: "castWeightedVote",
+              args:         [proposalId, toArg(encrypted[0]), toArg(encrypted[1]), toArg(encrypted[2]), weight],
+              value:        cost,
+              ...ARB_GAS,
+            });
 
         // ── 3. Wait for confirmation ─────────────────────────────────────────
+        setTxHash(hash);
         setStage("confirming");
       } catch (err: any) {
         setErrMsg(err?.message ?? "Transaction failed");
@@ -132,8 +127,8 @@ export function useFHEVote(proposalId: bigint) {
 
   // Advance to success once the on-chain confirmation lands.
   useEffect(() => {
-    if (isSuccess && stage === "confirming") setStage("success");
-  }, [isSuccess, stage]);
+    if (isSuccess) setStage("success");
+  }, [isSuccess]);
 
   return {
     castVote,
@@ -142,9 +137,9 @@ export function useFHEVote(proposalId: bigint) {
     lastChoice,
     isEncrypting:  stage === "encrypting",
     isSending:     stage === "sending",
-    isConfirming:  stage === "confirming" || isConfirming,
+    isConfirming:  stage === "confirming",
     isSuccess:     stage === "success",
     isError:       stage === "error",
-    reset:         () => { setStage("idle"); setErrMsg(""); },
+    reset:         () => { setStage("idle"); setErrMsg(""); setTxHash(undefined); },
   };
 }
