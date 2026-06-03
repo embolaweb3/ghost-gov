@@ -61,7 +61,7 @@ export default function VotePage({ params }: Props) {
   const hasVoted   = useHasVoted(proposalId);
   const { castVote, stage, errMsg, lastChoice } = useFHEVote(proposalId);
   const { resolve, isPending: isResolving, isSuccess: resolveSuccess } = useResolveProposal(proposalId);
-  const { compute, isPending: isComputing, isSuccess: computeSuccess, alreadyComputed } = useComputeAnalytics(proposalId);
+  const { compute, isComputing, isSuccess: computeSuccess, alreadyComputed } = useComputeAnalytics(proposalId);
   const { hasDelegated, delegatedTo, delegatedWeight } = useDelegationStatus();
   const { delegate, isPending: isDelegating } = useDelegate();
   const { revoke, isRevoking } = useRevoke();

@@ -5,8 +5,6 @@ import { parseEther, parseGwei } from "viem";
 import { VEILDAO_ABI, GHOSTANALYTICS_ABI, GHOSTDELEGATION_ABI, GHOSTVOTER_ABI, GHOSTSYBIL_ABI, GHOSTVETO_ABI, GHOSTBRIBE_ABI, getVeilDAOAddress, getAnalyticsAddress, getDelegationAddress, getGhostVoterAddress, getGhostSybilAddress, getGhostVetoAddress, getGhostBribeAddress, type Proposal, DEMO_PROPOSALS } from "@/lib/contracts";
 import { useState, useEffect } from "react";
 
-// Arbitrum Sepolia: FHE coprocessor calls make eth_estimateGas non-deterministic,
-// so MetaMask shows "Network fee unavailable". Bypass estimation with a fixed limit.
 const ARB_GAS = {
   maxFeePerGas:         parseGwei("0.3"),
   maxPriorityFeePerGas: parseGwei("0.01"),
@@ -157,15 +155,20 @@ export function useComputeAnalytics(proposalId: bigint) {
     query: { enabled: !!hash },
   });
   const isConfirming = !!hash && waitPending;
+  const isComputing  = isPending || isConfirming;
 
-  const { data: analyticsData } = useReadContract({
+  const { data: analyticsData, refetch: refetchAnalytics } = useReadContract({
     address,
     abi:          GHOSTANALYTICS_ABI,
     functionName: "getAnalytics",
     args:         [proposalId],
     query:        { enabled: !!address, refetchInterval: 5_000 },
   });
-  const alreadyComputed = !!(analyticsData as any)?.[3]; // computed is index 3 in the tuple
+  const alreadyComputed = !!(analyticsData as any)?.[3]; // index 3 = computed bool
+
+  useEffect(() => {
+    if (isSuccess) refetchAnalytics();
+  }, [isSuccess, refetchAnalytics]);
 
   const compute = () => {
     if (!address) return;
@@ -178,7 +181,7 @@ export function useComputeAnalytics(proposalId: bigint) {
     });
   };
 
-  return { compute, isPending, isConfirming, isSuccess, alreadyComputed };
+  return { compute, isComputing, isSuccess, alreadyComputed };
 }
 
 export function useDelegationStatus() {
