@@ -5,6 +5,7 @@ import { parseEther, parseGwei } from "viem";
 import { VEILDAO_ABI, GHOSTANALYTICS_ABI, GHOSTDELEGATION_ABI, GHOSTVOTER_ABI, GHOSTSYBIL_ABI, GHOSTVETO_ABI, GHOSTBRIBE_ABI, getVeilDAOAddress, getAnalyticsAddress, getDelegationAddress, getGhostVoterAddress, getGhostSybilAddress, getGhostVetoAddress, getGhostBribeAddress, type Proposal, DEMO_PROPOSALS } from "@/lib/contracts";
 import { useState, useEffect } from "react";
 
+
 const ARB_GAS = {
   maxFeePerGas:         parseGwei("0.3"),
   maxPriorityFeePerGas: parseGwei("0.01"),
@@ -164,7 +165,7 @@ export function useComputeAnalytics(proposalId: bigint) {
     args:         [proposalId],
     query:        { enabled: !!address, refetchInterval: 5_000 },
   });
-  const alreadyComputed = !!(analyticsData as any)?.[3]; // index 3 = computed bool
+  const alreadyComputed = !!(analyticsData as any)?.computed;
 
   useEffect(() => {
     if (isSuccess) refetchAnalytics();
