@@ -5,10 +5,12 @@ import { parseEther, parseGwei } from "viem";
 import { VEILDAO_ABI, GHOSTANALYTICS_ABI, GHOSTDELEGATION_ABI, GHOSTVOTER_ABI, GHOSTSYBIL_ABI, GHOSTVETO_ABI, GHOSTBRIBE_ABI, getVeilDAOAddress, getAnalyticsAddress, getDelegationAddress, getGhostVoterAddress, getGhostSybilAddress, getGhostVetoAddress, getGhostBribeAddress, type Proposal, DEMO_PROPOSALS } from "@/lib/contracts";
 import { useState, useEffect } from "react";
 
-// Arbitrum Sepolia base fee can undercut viem's default estimate — pin explicit limits.
+// Arbitrum Sepolia: FHE coprocessor calls make eth_estimateGas non-deterministic,
+// so MetaMask shows "Network fee unavailable". Bypass estimation with a fixed limit.
 const ARB_GAS = {
   maxFeePerGas:         parseGwei("0.3"),
   maxPriorityFeePerGas: parseGwei("0.01"),
+  gas:                  3_000_000n,
 } as const;
 
 function useContractAddress() {

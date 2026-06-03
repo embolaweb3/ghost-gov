@@ -12,6 +12,7 @@ import { VEILDAO_ABI, getVeilDAOAddress, type VoteChoice, type VoteWeight, WEIGH
 const ARB_GAS = {
   maxFeePerGas:         parseGwei("0.3"),
   maxPriorityFeePerGas: parseGwei("0.01"),
+  gas:                  3_000_000n,
 } as const;
 
 type VoteStage =
@@ -75,6 +76,9 @@ export function useFHEVote(proposalId: bigint) {
         setLastChoice(choice);
         setStage("encrypting");
 
+        // Each vote is a triple: exactly one field carries the weight, the rest are 0.
+        // The FHE ciphertexts are randomised — an observer CANNOT determine
+        // which was non-zero, making coercion cryptographically impossible.
         const w = BigInt(weight);
         const forVal     = choice === "for"     ? w : 0n;
         const againstVal = choice === "against" ? w : 0n;
