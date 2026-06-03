@@ -156,6 +156,15 @@ export function useComputeAnalytics(proposalId: bigint) {
   });
   const isConfirming = !!hash && waitPending;
 
+  const { data: analyticsData } = useReadContract({
+    address,
+    abi:          GHOSTANALYTICS_ABI,
+    functionName: "getAnalytics",
+    args:         [proposalId],
+    query:        { enabled: !!address, refetchInterval: 5_000 },
+  });
+  const alreadyComputed = !!(analyticsData as any)?.[3]; // computed is index 3 in the tuple
+
   const compute = () => {
     if (!address) return;
     writeContract({
@@ -167,7 +176,7 @@ export function useComputeAnalytics(proposalId: bigint) {
     });
   };
 
-  return { compute, isPending, isConfirming, isSuccess };
+  return { compute, isPending, isConfirming, isSuccess, alreadyComputed };
 }
 
 export function useDelegationStatus() {

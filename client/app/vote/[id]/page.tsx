@@ -61,7 +61,7 @@ export default function VotePage({ params }: Props) {
   const hasVoted   = useHasVoted(proposalId);
   const { castVote, stage, errMsg, lastChoice } = useFHEVote(proposalId);
   const { resolve, isPending: isResolving, isSuccess: resolveSuccess } = useResolveProposal(proposalId);
-  const { compute, isPending: isComputing, isSuccess: computeSuccess } = useComputeAnalytics(proposalId);
+  const { compute, isPending: isComputing, isSuccess: computeSuccess, alreadyComputed } = useComputeAnalytics(proposalId);
   const { hasDelegated, delegatedTo, delegatedWeight } = useDelegationStatus();
   const { delegate, isPending: isDelegating } = useDelegate();
   const { revoke, isRevoking } = useRevoke();
@@ -292,8 +292,8 @@ export default function VotePage({ params }: Props) {
             {proposal.resolved && (
               <FHEAnalyticsPanel
                 proposal={proposal}
-                onCompute={isDemoMode ? undefined : compute}
-                isComputing={isComputing || computeSuccess}
+                onCompute={isDemoMode || alreadyComputed || computeSuccess ? undefined : compute}
+                isComputing={isComputing}
                 analyticsAddress={analyticsAddress || undefined}
               />
             )}
