@@ -6,7 +6,7 @@ import { Shield, Lock, Eye, ArrowRight, Zap, Users, ChevronDown, ShieldCheck, Vo
 import { NavBar } from "@/components/NavBar";
 import { ParticleField } from "@/components/ParticleField";
 import { ProposalCard } from "@/components/ProposalCard";
-import { DEMO_PROPOSALS } from "@/lib/contracts";
+import { useProposals } from "@/hooks/useVeilDAO";
 
 const HOW_IT_WORKS = [
   {
@@ -56,6 +56,9 @@ const WHY_IT_MATTERS = [
 ];
 
 export default function HomePage() {
+  const { proposals } = useProposals();
+  const previewProposals = proposals.slice(0, 2);
+
   return (
     <div className="min-h-screen">
       <NavBar />
@@ -228,7 +231,7 @@ export default function HomePage() {
         </div>
 
         <div className="grid md:grid-cols-2 gap-4">
-          {DEMO_PROPOSALS.slice(0, 2).map((p, i) => (
+          {previewProposals.map((p, i) => (
             <ProposalCard key={p.id.toString()} proposal={p} index={i} />
           ))}
         </div>
