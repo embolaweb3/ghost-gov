@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Shield, Loader2, ChevronDown } from "lucide-react";
 import { clsx } from "clsx";
@@ -27,6 +27,12 @@ export function CreateProposalModal({ open, onClose }: Props) {
   const [duration,    setDuration]    = useState(300);
 
   const { createProposal, isPending, isConfirming, isSuccess } = useCreateProposal();
+
+  useEffect(() => {
+    if (!isSuccess) return;
+    const t = setTimeout(onClose, 1500);
+    return () => clearTimeout(t);
+  }, [isSuccess, onClose]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();

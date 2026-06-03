@@ -5,7 +5,13 @@ import { useWriteContract, useWaitForTransactionReceipt, useChainId, useWalletCl
 import { createCofheConfig, createCofheClient } from "@cofhe/sdk/web";
 import { arbSepolia } from "@cofhe/sdk/chains";
 import { Encryptable } from "@cofhe/sdk";
+import { parseGwei } from "viem";
 import { VEILDAO_ABI, getVeilDAOAddress, type VoteChoice, type VoteWeight, WEIGHT_COSTS } from "@/lib/contracts";
+
+const ARB_GAS = {
+  maxFeePerGas:         parseGwei("0.3"),
+  maxPriorityFeePerGas: parseGwei("0.01"),
+} as const;
 
 type VoteStage =
   | "idle"
@@ -100,6 +106,7 @@ export function useFHEVote(proposalId: bigint) {
             abi:          VEILDAO_ABI,
             functionName: "castVote",
             args:         [proposalId, toArg(encrypted[0]), toArg(encrypted[1]), toArg(encrypted[2])],
+            ...ARB_GAS,
           });
         } else {
           // Quadratic path — castWeightedVote with ETH payment
@@ -109,6 +116,7 @@ export function useFHEVote(proposalId: bigint) {
             functionName: "castWeightedVote",
             args:         [proposalId, toArg(encrypted[0]), toArg(encrypted[1]), toArg(encrypted[2]), weight],
             value:        cost,
+            ...ARB_GAS,
           });
         }
 

@@ -1,9 +1,15 @@
 "use client";
 
 import { useReadContract, useWriteContract, useWaitForTransactionReceipt, useAccount, useChainId } from "wagmi";
-import { parseEther } from "viem";
+import { parseEther, parseGwei } from "viem";
 import { VEILDAO_ABI, GHOSTANALYTICS_ABI, GHOSTDELEGATION_ABI, GHOSTVOTER_ABI, GHOSTSYBIL_ABI, GHOSTVETO_ABI, GHOSTBRIBE_ABI, getVeilDAOAddress, getAnalyticsAddress, getDelegationAddress, getGhostVoterAddress, getGhostSybilAddress, getGhostVetoAddress, getGhostBribeAddress, type Proposal, DEMO_PROPOSALS } from "@/lib/contracts";
 import { useState, useEffect } from "react";
+
+// Arbitrum Sepolia base fee can undercut viem's default estimate — pin explicit limits.
+const ARB_GAS = {
+  maxFeePerGas:         parseGwei("0.3"),
+  maxPriorityFeePerGas: parseGwei("0.01"),
+} as const;
 
 function useContractAddress() {
   const chainId = useChainId();
@@ -27,32 +33,29 @@ function useGhostVoterAddress() {
 
 export function useProposals() {
   const address = useContractAddress();
-  const [useDemoData, setUseDemoData] = useState(false);
 
   const { data: count } = useReadContract({
     address,
     abi:          VEILDAO_ABI,
     functionName: "proposalCount",
-    query:        { enabled: !!address },
+    query:        { enabled: !!address, refetchInterval: 5_000 },
   });
 
   const { data: proposals, isLoading } = useReadContract({
     address,
     abi:          VEILDAO_ABI,
     functionName: "getProposals",
-    args:         [0n, 20n],
-    query:        { enabled: !!address && count !== undefined },
+    args:         [0n, 50n],
+    query:        { enabled: !!address && count !== undefined, refetchInterval: 5_000 },
   });
 
-  useEffect(() => {
-    if (!address) setUseDemoData(true);
-  }, [address]);
+  const isDemoMode = !address;
 
   return {
-    proposals:   useDemoData ? DEMO_PROPOSALS : ((proposals as Proposal[]) ?? []),
-    isLoading:   !useDemoData && isLoading,
-    isDemoMode:  useDemoData,
-    totalCount:  useDemoData ? BigInt(DEMO_PROPOSALS.length) : (count ?? 0n),
+    proposals:   isDemoMode ? DEMO_PROPOSALS : ((proposals as Proposal[]) ?? []),
+    isLoading:   !isDemoMode && isLoading,
+    isDemoMode,
+    totalCount:  isDemoMode ? BigInt(DEMO_PROPOSALS.length) : (count ?? 0n),
   };
 }
 
@@ -114,6 +117,7 @@ export function useCreateProposal() {
       abi:          VEILDAO_ABI,
       functionName: "createProposal",
       args:         [title, description, category, BigInt(durationSeconds)],
+      ...ARB_GAS,
     });
   };
 
@@ -136,6 +140,7 @@ export function useResolveProposal(proposalId: bigint) {
       abi:          VEILDAO_ABI,
       functionName: "resolveProposal",
       args:         [proposalId],
+      ...ARB_GAS,
     });
   };
 
@@ -158,6 +163,7 @@ export function useComputeAnalytics(proposalId: bigint) {
       abi:          GHOSTANALYTICS_ABI,
       functionName: "computeAnalytics",
       args:         [proposalId],
+      ...ARB_GAS,
     });
   };
 
@@ -218,6 +224,7 @@ export function useDelegate() {
       abi:          GHOSTDELEGATION_ABI,
       functionName: "delegate",
       args:         [to, encWeight, weight],
+      ...ARB_GAS,
     });
   };
 
@@ -240,6 +247,7 @@ export function useRevoke() {
       abi:          GHOSTDELEGATION_ABI,
       functionName: "revoke",
       args:         [],
+      ...ARB_GAS,
     });
   };
 
@@ -262,6 +270,7 @@ export function useCastDelegatedVote(proposalId: bigint) {
       abi:          VEILDAO_ABI,
       functionName: "castDelegatedVote",
       args:         [proposalId, direction],
+      ...ARB_GAS,
     });
   };
 
@@ -405,6 +414,7 @@ export function useSubmitVeto(proposalId: bigint) {
       abi:          GHOSTVETO_ABI,
       functionName: "submitVeto",
       args:         [proposalId, encVeto],
+      ...ARB_GAS,
     });
   };
 
@@ -459,6 +469,7 @@ export function useCreateBribe() {
       functionName: "createBribe",
       args:         [proposalId, direction],
       value:        parseEther(amountEth),
+      ...ARB_GAS,
     });
   };
 
@@ -482,6 +493,7 @@ export function useAttemptClaim() {
       abi:          GHOSTBRIBE_ABI,
       functionName: "attemptClaim",
       args:         [bribeId, encDir],
+      ...ARB_GAS,
     });
   };
 
@@ -504,6 +516,7 @@ export function useCancelBribe() {
       abi:          GHOSTBRIBE_ABI,
       functionName: "cancelBribe",
       args:         [bribeId],
+      ...ARB_GAS,
     });
   };
 
